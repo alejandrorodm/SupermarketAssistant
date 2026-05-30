@@ -6,6 +6,8 @@ import { Dashboard } from './pages/Dashboard'
 import { Scan } from './pages/Scan'
 import { Review } from './pages/Review'
 import { Compare } from './pages/Compare'
+import { Stats } from './pages/Stats'
+import { TicketDetail } from './pages/TicketDetail'
 import type { Session } from '@supabase/supabase-js'
 
 function App() {
@@ -64,7 +66,11 @@ function App() {
         />
         <Route 
           path="/stats" 
-          element={session ? <div className="p-6">Estadísticas completas (Próximamente)</div> : <Navigate to="/auth" replace />} 
+          element={session ? <Stats /> : <Navigate to="/auth" replace />} 
+        />
+        <Route 
+          path="/ticket/:id" 
+          element={session ? <TicketDetail /> : <Navigate to="/auth" replace />} 
         />
       </Routes>
     </Router>

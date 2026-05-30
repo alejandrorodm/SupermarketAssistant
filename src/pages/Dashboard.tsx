@@ -151,7 +151,11 @@ export function Dashboard() {
                   </div>
                 ) : (
                   data?.ticketsRecientes.map((ticket, i) => (
-                    <div key={i} className="bg-white dark:bg-slate-800 p-4 rounded-2xl flex items-center justify-between shadow-sm border border-slate-100 dark:border-slate-700">
+                    <button 
+                      key={i}
+                      onClick={() => navigate(`/ticket/${ticket.id}`)}
+                      className="w-full text-left bg-white dark:bg-slate-800 p-4 rounded-2xl flex items-center justify-between shadow-sm border border-slate-100 dark:border-slate-700 hover:border-blue-500 transition-colors"
+                    >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400">
                           <ShoppingCart size={18} />
@@ -164,7 +168,7 @@ export function Dashboard() {
                         </div>
                       </div>
                       <p className="font-bold text-slate-900 dark:text-white">{Number(ticket.total).toFixed(2)} €</p>
-                    </div>
+                    </button>
                   ))
                 )}
               </div>

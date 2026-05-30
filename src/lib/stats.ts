@@ -130,3 +130,64 @@ export async function buscarPreciosProducto(userId: string, termino: string): Pr
     throw new Error('No se pudo realizar la búsqueda.')
   }
 }
+
+export async function getTicketDetails(ticketId: string) {
+  try {
+    const { data: ticket, error: ticketError } = await supabase
+      .from('tickets')
+      .select('*')
+      .eq('id', ticketId)
+      .single()
+
+    if (ticketError) throw ticketError
+
+    const { data: items, error: itemsError } = await supabase
+      .from('ticket_items')
+      .select('*')
+      .eq('ticket_id', ticketId)
+      .order('categoria')
+
+    if (itemsError) throw itemsError
+
+    return { ticket, items }
+  } catch (error: any) {
+    console.error('Error fetching ticket details:', error)
+    throw new Error('No se pudo cargar el detalle del ticket.')
+  }
+}
+
+export async function getFullStats(userId: string) {
+  try {
+    const { data: tickets, error: ticketsError } = await supabase
+      .from('tickets')
+      .select('id, total, supermercado, fecha')
+      .eq('user_id', userId)
+      .order('fecha', { ascending: false })
+
+    if (ticketsError) throw ticketsError
+
+    const gastoTotal = tickets.reduce((acc, curr) => acc + Number(curr.total), 0)
+
+    const gastoSupermercado: Record<string, number> = {}
+    tickets.forEach(t => {
+      const sup = t.supermercado || 'Otros'
+      if (!gastoSupermercado[sup]) gastoSupermercado[sup] = 0
+      gastoSupermercado[sup] += Number(t.total)
+    })
+
+    const chartData = Object.keys(gastoSupermercado).map(sup => ({
+      name: sup,
+      value: Number(gastoSupermercado[sup].toFixed(2)),
+      fill: categoryColors[sup] || '#3b82f6' // Color por defecto si no es categoría
+    })).sort((a, b) => b.value - a.value)
+
+    return {
+      historial: tickets,
+      gastoTotal,
+      gastoPorSupermercado: chartData
+    }
+  } catch (error: any) {
+    console.error('Error fetching full stats:', error)
+    throw new Error('No se pudieron cargar las estadísticas.')
+  }
+}
