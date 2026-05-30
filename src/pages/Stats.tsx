@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Loader2, PieChart as PieChartIcon, TrendingUp, Calendar, ShoppingCart, Search } from 'lucide-react'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { Loader2, PieChart as PieChartIcon, TrendingUp, Calendar, ShoppingCart, Search, Tag } from 'lucide-react'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts'
 import { BottomNav } from '../components/BottomNav'
 import { supabase } from '../lib/supabase'
 import { getFullStats } from '../lib/stats'
@@ -9,7 +9,7 @@ import { getFullStats } from '../lib/stats'
 export function Stats() {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(true)
-  const [data, setData] = useState<{ historial: any[], gastoTotal: number, gastoPorSupermercado: any[] } | null>(null)
+  const [data, setData] = useState<{ historial: any[], gastoTotal: number, gastoPorSupermercado: any[], gastoPorCategoria: any[] } | null>(null)
 
   useEffect(() => {
     async function loadStats() {
@@ -84,6 +84,51 @@ export function Stats() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+              <h3 className="font-bold text-slate-900 dark:text-white mb-6">Gasto por Categoría</h3>
+              {data.gastoPorCategoria && data.gastoPorCategoria.length > 0 ? (
+                <>
+                  <div className="h-48 w-full mb-6">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={data.gastoPorCategoria}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="value"
+                          stroke="none"
+                        >
+                          {data.gastoPorCategoria.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value: number) => [`${value.toFixed(2)} €`, 'Gastado']}
+                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="space-y-3">
+                    {data.gastoPorCategoria.map((cat, i) => (
+                      <div key={i} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-3">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }}></div>
+                          <span className="text-slate-600 dark:text-slate-300 font-medium">{cat.name}</span>
+                        </div>
+                        <span className="font-bold text-slate-900 dark:text-white">{cat.value.toFixed(2)} €</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-slate-500 text-center py-4">No hay datos de categorías.</p>
+              )}
             </div>
 
             <div>

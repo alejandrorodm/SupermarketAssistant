@@ -175,16 +175,45 @@ export async function getFullStats(userId: string) {
       gastoSupermercado[sup] += Number(t.total)
     })
 
-    const chartData = Object.keys(gastoSupermercado).map(sup => ({
+    const chartDataSuper = Object.keys(gastoSupermercado).map(sup => ({
       name: sup,
       value: Number(gastoSupermercado[sup].toFixed(2)),
-      fill: categoryColors[sup] || '#3b82f6' // Color por defecto si no es categoría
+      fill: '#3b82f6' // Azul genérico para supermercados
     })).sort((a, b) => b.value - a.value)
+
+    // Calculo de Categorías Global
+    let categoriasGlobales: CategoryData[] = []
+    const ticketIds = tickets.map(t => t.id)
+
+    if (ticketIds.length > 0) {
+      const { data: itemsData, error: itemsError } = await supabase
+        .from('ticket_items')
+        .select('categoria, cantidad, precio_unitario')
+        .in('ticket_id', ticketIds)
+
+      if (itemsError) throw itemsError
+
+      const gastoPorCategoria: Record<string, number> = {}
+
+      itemsData.forEach(item => {
+        const cat = item.categoria
+        const costeLineal = Number(item.cantidad) * Number(item.precio_unitario)
+        if (!gastoPorCategoria[cat]) gastoPorCategoria[cat] = 0
+        gastoPorCategoria[cat] += costeLineal
+      })
+
+      categoriasGlobales = Object.keys(gastoPorCategoria).map(cat => ({
+        name: cat,
+        value: Number(gastoPorCategoria[cat].toFixed(2)),
+        color: categoryColors[cat] || categoryColors['Otros']
+      })).sort((a, b) => b.value - a.value)
+    }
 
     return {
       historial: tickets,
       gastoTotal,
-      gastoPorSupermercado: chartData
+      gastoPorSupermercado: chartDataSuper,
+      gastoPorCategoria: categoriasGlobales
     }
   } catch (error: any) {
     console.error('Error fetching full stats:', error)
