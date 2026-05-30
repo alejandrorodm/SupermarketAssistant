@@ -83,3 +83,50 @@ export async function getDashboardStats(userId: string) {
     throw new Error('Error al cargar las estadísticas del mes.')
   }
 }
+
+export interface ProductoComparado {
+  producto_nombre: string
+  precio_unitario: number
+  supermercado: string
+  fecha: string
+}
+
+export async function buscarPreciosProducto(userId: string, termino: string): Promise<ProductoComparado[]> {
+  try {
+    if (!termino.trim()) return []
+
+    // Buscar items cuyo nombre contenga el término, y hacer JOIN con tickets para tener supermercado y fecha
+    const { data, error } = await supabase
+      .from('ticket_items')
+      .select(`
+        producto_nombre,
+        precio_unitario,
+        tickets!inner(supermercado, fecha, user_id)
+      `)
+      .ilike('producto_nombre', `%${termino}%`)
+      .eq('tickets.user_id', userId)
+      .order('precio_unitario', { ascending: true })
+      // Limitamos a 50 resultados para no saturar
+      .limit(50)
+
+    if (error) throw error
+
+    // Formatear los datos para la interfaz
+    const resultados: ProductoComparado[] = data.map((row: any) => ({
+      producto_nombre: row.producto_nombre,
+      precio_unitario: Number(row.precio_unitario),
+      supermercado: row.tickets.supermercado,
+      fecha: row.tickets.fecha
+    }))
+
+    // Podemos tener el mismo producto varias veces en el mismo supermercado (distintas fechas)
+    // Agruparemos por supermercado y producto para quedarnos con el más reciente o simplemente listarlos todos.
+    // En este caso, devolveremos todos para ver el histórico de precios, ya que ordenamos por precio.
+    
+    return resultados
+
+  } catch (error: any) {
+    console.error('Error buscando productos:', error)
+    throw new Error('No se pudo realizar la búsqueda.')
+  }
+}

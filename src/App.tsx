@@ -5,6 +5,7 @@ import { Auth } from './pages/Auth'
 import { Dashboard } from './pages/Dashboard'
 import { Scan } from './pages/Scan'
 import { Review } from './pages/Review'
+import { Compare } from './pages/Compare'
 import type { Session } from '@supabase/supabase-js'
 
 function App() {
@@ -56,14 +57,14 @@ function App() {
           element={session ? <Review /> : <Navigate to="/auth" replace />} 
         />
         
-        {/* Placeholders temporales para las demás rutas del BottomNav */}
-        <Route 
-          path="/stats" 
-          element={session ? <div className="p-6">Estadísticas (Próximamente)</div> : <Navigate to="/auth" replace />} 
-        />
+        {/* Rutas adicionales de BottomNav */}
         <Route 
           path="/compare" 
-          element={session ? <div className="p-6">Comparador (Próximamente)</div> : <Navigate to="/auth" replace />} 
+          element={session ? <Compare /> : <Navigate to="/auth" replace />} 
+        />
+        <Route 
+          path="/stats" 
+          element={session ? <div className="p-6">Estadísticas completas (Próximamente)</div> : <Navigate to="/auth" replace />} 
         />
       </Routes>
     </Router>
