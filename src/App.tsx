@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
 import { Auth } from './pages/Auth'
@@ -8,6 +8,10 @@ import { Review } from './pages/Review'
 import { Compare } from './pages/Compare'
 import { Stats } from './pages/Stats'
 import { TicketDetail } from './pages/TicketDetail'
+import { Settings } from './pages/Settings'
+import { ShoppingList } from './pages/ShoppingList'
+import { History } from './pages/History'
+import { EditTicket } from './pages/EditTicket'
 import type { Session } from '@supabase/supabase-js'
 
 function App() {
@@ -37,41 +41,27 @@ function App() {
     )
   }
 
+  const protect = (element: React.ReactNode) =>
+    session ? element : <Navigate to="/auth" replace />
+
   return (
     <Router>
       <Routes>
-        <Route 
-          path="/auth" 
-          element={!session ? <Auth /> : <Navigate to="/" replace />} 
-        />
-        
+        <Route path="/auth" element={!session ? <Auth /> : <Navigate to="/" replace />} />
+
         {/* Rutas protegidas */}
-        <Route 
-          path="/" 
-          element={session ? <Dashboard /> : <Navigate to="/auth" replace />} 
-        />
-        <Route 
-          path="/scan" 
-          element={session ? <Scan /> : <Navigate to="/auth" replace />} 
-        />
-        <Route 
-          path="/review" 
-          element={session ? <Review /> : <Navigate to="/auth" replace />} 
-        />
-        
-        {/* Rutas adicionales de BottomNav */}
-        <Route 
-          path="/compare" 
-          element={session ? <Compare /> : <Navigate to="/auth" replace />} 
-        />
-        <Route 
-          path="/stats" 
-          element={session ? <Stats /> : <Navigate to="/auth" replace />} 
-        />
-        <Route 
-          path="/ticket/:id" 
-          element={session ? <TicketDetail /> : <Navigate to="/auth" replace />} 
-        />
+        <Route path="/" element={protect(<Dashboard />)} />
+        <Route path="/scan" element={protect(<Scan />)} />
+        <Route path="/review" element={protect(<Review />)} />
+        <Route path="/compare" element={protect(<Compare />)} />
+        <Route path="/stats" element={protect(<Stats />)} />
+        <Route path="/list" element={protect(<ShoppingList />)} />
+        <Route path="/history" element={protect(<History />)} />
+        <Route path="/settings" element={protect(<Settings />)} />
+        <Route path="/ticket/:id" element={protect(<TicketDetail />)} />
+        <Route path="/ticket/:id/edit" element={protect(<EditTicket />)} />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   )

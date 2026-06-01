@@ -86,3 +86,69 @@ export async function guardarTicketEnSupabase(
     throw new Error(error.message || 'Error al guardar el ticket en la base de datos.')
   }
 }
+
+/**
+ * Elimina un ticket y todos sus items. Borramos los items primero por si la
+ * relación no tiene ON DELETE CASCADE configurado en la base de datos.
+ */
+export async function eliminarTicket(ticketId: string): Promise<void> {
+  try {
+    const { error: itemsError } = await supabase
+      .from('ticket_items')
+      .delete()
+      .eq('ticket_id', ticketId)
+    if (itemsError) throw itemsError
+
+    const { error: ticketError } = await supabase
+      .from('tickets')
+      .delete()
+      .eq('id', ticketId)
+    if (ticketError) throw ticketError
+  } catch (error: any) {
+    console.error('Error eliminando ticket:', error)
+    throw new Error(error.message || 'No se pudo eliminar el ticket.')
+  }
+}
+
+/**
+ * Actualiza la cabecera del ticket y reemplaza por completo su lista de items.
+ */
+export async function actualizarTicketEnSupabase(
+  ticketId: string,
+  ticketData: TicketData,
+): Promise<void> {
+  try {
+    const { error: updateError } = await supabase
+      .from('tickets')
+      .update({
+        supermercado: ticketData.supermercado,
+        fecha: ticketData.fecha,
+        total: ticketData.total,
+      })
+      .eq('id', ticketId)
+    if (updateError) throw updateError
+
+    // Reemplazar items: borrar los existentes e insertar los nuevos
+    const { error: delError } = await supabase
+      .from('ticket_items')
+      .delete()
+      .eq('ticket_id', ticketId)
+    if (delError) throw delError
+
+    const itemsToInsert = ticketData.items.map((item) => ({
+      ticket_id: ticketId,
+      producto_nombre: item.producto_nombre,
+      cantidad: item.cantidad,
+      precio_unitario: item.precio_unitario,
+      categoria: item.categoria,
+    }))
+
+    if (itemsToInsert.length > 0) {
+      const { error: insError } = await supabase.from('ticket_items').insert(itemsToInsert)
+      if (insError) throw insError
+    }
+  } catch (error: any) {
+    console.error('Error actualizando ticket:', error)
+    throw new Error(error.message || 'No se pudo actualizar el ticket.')
+  }
+}

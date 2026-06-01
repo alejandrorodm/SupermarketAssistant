@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, Loader2, Trophy, Tag, Calendar, MapPin } from 'lucide-react'
 import { BottomNav } from '../components/BottomNav'
 import { supabase } from '../lib/supabase'
 import { buscarPreciosProducto } from '../lib/stats'
 import type { ProductoComparado } from '../lib/stats'
-import { useDebounce } from '../hooks/useDebounce' // Tendré que crear este hook
+import { useDebounce } from '../hooks/useDebounce'
 
 export function Compare() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -45,7 +45,7 @@ export function Compare() {
   }, [debouncedSearchTerm, userId])
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-28">
       <header className="bg-gradient-to-br from-blue-600 to-indigo-700 px-6 pt-12 pb-8 shadow-lg rounded-b-3xl text-white">
         <h1 className="text-2xl font-bold mb-2">Comparador</h1>
         <p className="text-blue-100 text-sm mb-6">Busca un producto y descubre dónde es más barato.</p>

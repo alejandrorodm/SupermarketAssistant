@@ -1,8 +1,7 @@
-import React, { useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Camera, Image as ImageIcon, Loader2, X, ChevronLeft } from 'lucide-react'
 import { procesarTicketConGemini } from '../lib/gemini'
-import type { TicketData } from '../lib/gemini'
 
 export function Scan() {
   const navigate = useNavigate()
