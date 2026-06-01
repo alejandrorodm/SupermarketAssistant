@@ -28,4 +28,17 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        // Separa las librerías pesadas en chunks propios para mejor cacheo.
+        // rolldown solo admite la forma de función de manualChunks.
+        manualChunks(id) {
+          if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) return 'recharts'
+          if (id.includes('@supabase')) return 'supabase'
+          return undefined
+        },
+      },
+    },
+  },
 })
