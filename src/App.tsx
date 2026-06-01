@@ -19,6 +19,7 @@ const EditTicket = lazy(() => import('./pages/EditTicket').then((m) => ({ defaul
 const Households = lazy(() => import('./pages/Households').then((m) => ({ default: m.Households })))
 const Balance = lazy(() => import('./pages/Balance').then((m) => ({ default: m.Balance })))
 const Goals = lazy(() => import('./pages/Goals').then((m) => ({ default: m.Goals })))
+const BatchScan = lazy(() => import('./pages/BatchScan').then((m) => ({ default: m.BatchScan })))
 
 function Loader() {
   return (
@@ -63,6 +64,7 @@ function App() {
           {/* Rutas protegidas */}
           <Route path="/" element={protect(<Dashboard />)} />
           <Route path="/scan" element={protect(<Scan />)} />
+          <Route path="/scan/batch" element={protect(<BatchScan />)} />
           <Route path="/review" element={protect(<Review />)} />
           <Route path="/compare" element={protect(<Compare />)} />
           <Route path="/stats" element={protect(<Stats />)} />

@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getErrorMessage } from '../lib/errors'
-import { Camera, Image as ImageIcon, Loader2, X, ChevronLeft } from 'lucide-react'
+import { Camera, Image as ImageIcon, Loader2, X, ChevronLeft, Images } from 'lucide-react'
 import { procesarTicketConGemini } from '../lib/gemini'
+import { isImageTooLarge, splitDataUrl } from '../lib/scan'
 
 export function Scan() {
   const navigate = useNavigate()
@@ -16,7 +17,7 @@ export function Scan() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (file.size > 5 * 1024 * 1024) { // Límite de 5MB
+    if (isImageTooLarge(file.size)) {
       setError('La imagen es demasiado grande. Máximo 5MB.')
       return
     }
@@ -37,8 +38,7 @@ export function Scan() {
 
     try {
       // imageSrc tiene el formato: data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ...
-      const [header, base64] = imageSrc.split(',')
-      const mimeType = header.split(':')[1].split(';')[0]
+      const { base64, mimeType } = splitDataUrl(imageSrc)
 
       const data = await procesarTicketConGemini(base64, mimeType)
       
@@ -105,14 +105,22 @@ export function Scan() {
               <label className="relative flex w-full cursor-pointer items-center justify-center gap-3 rounded-2xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 px-8 py-4 text-lg font-semibold text-slate-700 dark:text-slate-200 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 active:scale-95 transition-all">
                 <ImageIcon size={24} />
                 Subir de la galería
-                <input 
-                  type="file" 
-                  accept="image/*" 
+                <input
+                  type="file"
+                  accept="image/*"
                   ref={fileInputRef}
-                  className="hidden" 
+                  className="hidden"
                   onChange={handleFileChange}
                 />
               </label>
+
+              <button
+                onClick={() => navigate('/scan/batch')}
+                className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline pt-1"
+              >
+                <Images size={16} />
+                ¿Tienes varios? Escanéalos a la vez
+              </button>
             </div>
             
             {error && (
