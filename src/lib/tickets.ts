@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { getErrorMessage } from './errors'
 import type { TicketData } from './gemini'
 import type { SplitMode } from './households'
 
@@ -92,9 +93,11 @@ export async function guardarTicketEnSupabase(
     if (itemsError) throw itemsError
 
     return ticketId
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error guardando ticket completo:', error)
-    throw new Error(error.message || 'Error al guardar el ticket en la base de datos.')
+    throw new Error(getErrorMessage(error, 'Error al guardar el ticket en la base de datos.'), {
+      cause: error,
+    })
   }
 }
 
@@ -115,9 +118,9 @@ export async function eliminarTicket(ticketId: string): Promise<void> {
       .delete()
       .eq('id', ticketId)
     if (ticketError) throw ticketError
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error eliminando ticket:', error)
-    throw new Error(error.message || 'No se pudo eliminar el ticket.')
+    throw new Error(getErrorMessage(error, 'No se pudo eliminar el ticket.'), { cause: error })
   }
 }
 
@@ -158,8 +161,8 @@ export async function actualizarTicketEnSupabase(
       const { error: insError } = await supabase.from('ticket_items').insert(itemsToInsert)
       if (insError) throw insError
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error actualizando ticket:', error)
-    throw new Error(error.message || 'No se pudo actualizar el ticket.')
+    throw new Error(getErrorMessage(error, 'No se pudo actualizar el ticket.'), { cause: error })
   }
 }

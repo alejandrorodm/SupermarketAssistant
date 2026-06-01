@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getErrorMessage } from '../lib/errors'
 import {
   Loader2,
   PieChart as PieChartIcon,
@@ -26,7 +27,15 @@ import {
 } from 'recharts'
 import { BottomNav } from '../components/BottomNav'
 import { supabase } from '../lib/supabase'
-import { getFullStats, getMonthlyTrend, getExportData, type MonthlyPoint } from '../lib/stats'
+import {
+  getFullStats,
+  getMonthlyTrend,
+  getExportData,
+  type MonthlyPoint,
+  type TicketSummary,
+  type SupermarketDatum,
+  type CategoryData,
+} from '../lib/stats'
 import { downloadCSV } from '../lib/export'
 import { Skeleton } from '../components/ui/Skeleton'
 import { EmptyState } from '../components/ui/EmptyState'
@@ -42,10 +51,10 @@ export function Stats() {
   const [userId, setUserId] = useState<string | null>(null)
   const [trend, setTrend] = useState<MonthlyPoint[]>([])
   const [data, setData] = useState<{
-    historial: any[]
+    historial: TicketSummary[]
     gastoTotal: number
-    gastoPorSupermercado: any[]
-    gastoPorCategoria: any[]
+    gastoPorSupermercado: SupermarketDatum[]
+    gastoPorCategoria: CategoryData[]
   } | null>(null)
 
   const householdId = active?.id ?? null
@@ -85,8 +94,8 @@ export function Stats() {
       }
       downloadCSV(`ticketsaver-${new Date().toISOString().slice(0, 10)}.csv`, rows)
       toast.success(`Exportadas ${rows.length} líneas a CSV.`)
-    } catch (err: any) {
-      toast.error(err.message || 'No se pudo exportar.')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'No se pudo exportar.'))
     } finally {
       setIsExporting(false)
     }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Sparkles, Loader2, RefreshCw, Lightbulb, Check, ShoppingBasket } from 'lucide-react'
 import { useUser } from '../hooks/useUser'
 import { getProductosFrecuentes, categoryColors } from '../lib/stats'
+import { getErrorMessage } from '../lib/errors'
 import { generarListaCompraIA, type ListaCompraIA } from '../lib/gemini'
 import { BottomNav } from '../components/BottomNav'
 import { EmptyState } from '../components/ui/EmptyState'
@@ -30,8 +31,8 @@ export function ShoppingList() {
       const productos = await getProductosFrecuentes(user.id)
       const result = await generarListaCompraIA(productos)
       setLista(result)
-    } catch (err: any) {
-      toast.error(err.message || 'No se pudo generar la lista.')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'No se pudo generar la lista.'))
     } finally {
       setIsGenerating(false)
     }

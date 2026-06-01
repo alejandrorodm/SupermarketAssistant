@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getErrorMessage } from '../lib/errors'
 import {
   ChevronLeft,
   Wallet,
@@ -35,6 +36,8 @@ export function Settings() {
   useEffect(() => {
     if (user) {
       const b = getBudget(user.id)
+      // Inicializa el formulario con el presupuesto guardado del usuario.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSavedBudget(b)
       setBudgetInput(b ? String(b) : '')
     }
@@ -66,8 +69,8 @@ export function Settings() {
       const today = new Date().toISOString().slice(0, 10)
       downloadCSV(`ticketsaver-${today}.csv`, rows)
       toast.success(`Exportadas ${rows.length} líneas a CSV.`)
-    } catch (err: any) {
-      toast.error(err.message || 'No se pudo exportar.')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'No se pudo exportar.'))
     } finally {
       setIsExporting(false)
     }

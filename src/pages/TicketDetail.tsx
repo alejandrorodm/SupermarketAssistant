@@ -1,17 +1,33 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { getErrorMessage } from '../lib/errors'
 import { ChevronLeft, Calendar, Loader2, ShoppingCart, Pencil, Trash2, ImageIcon } from 'lucide-react'
 import { getTicketDetails, categoryColors } from '../lib/stats'
 import { eliminarTicket } from '../lib/tickets'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { useToast } from '../contexts/ToastContext'
 
+interface TicketRow {
+  id: string
+  supermercado: string
+  fecha: string
+  total: number
+  ticket_image_url: string | null
+}
+interface ItemRow {
+  id: string
+  producto_nombre: string
+  cantidad: number
+  precio_unitario: number
+  categoria: string
+}
+
 export function TicketDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const toast = useToast()
 
-  const [data, setData] = useState<{ ticket: any; items: any[] } | null>(null)
+  const [data, setData] = useState<{ ticket: TicketRow; items: ItemRow[] } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -38,8 +54,8 @@ export function TicketDetail() {
       await eliminarTicket(id)
       toast.success('Ticket eliminado.')
       navigate('/', { replace: true })
-    } catch (err: any) {
-      toast.error(err.message || 'No se pudo eliminar.')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'No se pudo eliminar.'))
       setIsDeleting(false)
       setConfirmOpen(false)
     }

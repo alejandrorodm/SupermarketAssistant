@@ -6,6 +6,19 @@ export interface CategoryData {
   color: string
 }
 
+export interface TicketSummary {
+  id: string
+  total: number
+  supermercado: string
+  fecha: string
+}
+
+export interface SupermarketDatum {
+  name: string
+  value: number
+  fill: string
+}
+
 export const categoryColors: Record<string, string> = {
   'Proteínas': '#3b82f6', // blue-500
   'Carbohidratos': '#eab308', // yellow-500
@@ -83,9 +96,9 @@ export async function getDashboardStats(userId: string, householdId?: string | n
       numTickets: ticketsData.length,
       ticketMedio: ticketsData.length > 0 ? totalGastado / ticketsData.length : 0,
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching stats:', error)
-    throw new Error('Error al cargar las estadísticas del mes.')
+    throw new Error('Error al cargar las estadísticas del mes.', { cause: error })
   }
 }
 
@@ -117,7 +130,12 @@ export async function buscarPreciosProducto(userId: string, termino: string): Pr
     if (error) throw error
 
     // Formatear los datos para la interfaz
-    const resultados: ProductoComparado[] = data.map((row: any) => ({
+    type CompareRow = {
+      producto_nombre: string
+      precio_unitario: number
+      tickets: { supermercado: string; fecha: string }
+    }
+    const resultados: ProductoComparado[] = (data as unknown as CompareRow[]).map((row) => ({
       producto_nombre: row.producto_nombre,
       precio_unitario: Number(row.precio_unitario),
       supermercado: row.tickets.supermercado,
@@ -130,9 +148,9 @@ export async function buscarPreciosProducto(userId: string, termino: string): Pr
     
     return resultados
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error buscando productos:', error)
-    throw new Error('No se pudo realizar la búsqueda.')
+    throw new Error('No se pudo realizar la búsqueda.', { cause: error })
   }
 }
 
@@ -155,9 +173,9 @@ export async function getTicketDetails(ticketId: string) {
     if (itemsError) throw itemsError
 
     return { ticket, items }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching ticket details:', error)
-    throw new Error('No se pudo cargar el detalle del ticket.')
+    throw new Error('No se pudo cargar el detalle del ticket.', { cause: error })
   }
 }
 
@@ -223,9 +241,9 @@ export async function getFullStats(userId: string, householdId?: string | null) 
       gastoPorSupermercado: chartDataSuper,
       gastoPorCategoria: categoriasGlobales
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching full stats:', error)
-    throw new Error('No se pudieron cargar las estadísticas.')
+    throw new Error('No se pudieron cargar las estadísticas.', { cause: error })
   }
 }
 

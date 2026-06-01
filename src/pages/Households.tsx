@@ -18,6 +18,7 @@ import {
 import { useUser } from '../hooks/useUser'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { useToast } from '../contexts/ToastContext'
+import { getErrorMessage } from '../lib/errors'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import {
   createHousehold,
@@ -75,10 +76,12 @@ export function Households() {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadPending()
   }, [loadPending])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadActiveDetails()
   }, [loadActiveDetails])
 
@@ -91,8 +94,8 @@ export function Households() {
       await refresh()
       setActive(id)
       toast.success('Hogar creado.')
-    } catch (err: any) {
-      toast.error(err.message || 'No se pudo crear el hogar.')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'No se pudo crear el hogar.'))
     } finally {
       setCreating(false)
     }
@@ -106,8 +109,8 @@ export function Households() {
       setInviteEmail('')
       await loadActiveDetails()
       toast.success('Invitación enviada.')
-    } catch (err: any) {
-      toast.error(err.message || 'No se pudo invitar.')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'No se pudo invitar.'))
     } finally {
       setInviting(false)
     }
@@ -120,8 +123,8 @@ export function Households() {
       await loadPending()
       setActive(householdId)
       toast.success('Te has unido al hogar.')
-    } catch (err: any) {
-      toast.error(err.message || 'No se pudo aceptar la invitación.')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'No se pudo aceptar la invitación.'))
     }
   }
 
@@ -130,8 +133,8 @@ export function Households() {
       await cancelInvite(inviteId)
       await loadActiveDetails()
       toast.info('Invitación cancelada.')
-    } catch (err: any) {
-      toast.error(err.message || 'No se pudo cancelar.')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'No se pudo cancelar.'))
     }
   }
 
@@ -148,8 +151,8 @@ export function Households() {
       }
       setActive(null)
       await refresh()
-    } catch (err: any) {
-      toast.error(err.message || 'No se pudo completar la acción.')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'No se pudo completar la acción.'))
     } finally {
       setConfirm(null)
     }

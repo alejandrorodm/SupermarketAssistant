@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getErrorMessage } from '../lib/errors'
 import {
   ChevronLeft,
   Scale,
@@ -42,8 +43,8 @@ export function Balance() {
       const [b, s] = await Promise.all([getHouseholdBalance(active.id), getSettlements(active.id)])
       setBalance(b)
       setSettlements(s)
-    } catch (err: any) {
-      toast.error(err.message || 'No se pudo cargar el balance.')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'No se pudo cargar el balance.'))
     } finally {
       setLoading(false)
     }
@@ -51,6 +52,8 @@ export function Balance() {
   }, [active])
 
   useEffect(() => {
+    // Carga del balance al montar / cambiar de hogar.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load()
   }, [load])
 
@@ -61,8 +64,8 @@ export function Balance() {
       await addSettlement(active.id, debt.from, debt.to, debt.amount, 'Saldado desde balance')
       toast.success(`${debt.from_name} → ${debt.to_name}: ${euro(debt.amount)} registrado.`)
       await load()
-    } catch (err: any) {
-      toast.error(err.message || 'No se pudo registrar el pago.')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'No se pudo registrar el pago.'))
     } finally {
       setSettling(null)
     }
@@ -73,8 +76,8 @@ export function Balance() {
       await deleteSettlement(id)
       toast.info('Pago eliminado.')
       await load()
-    } catch (err: any) {
-      toast.error(err.message || 'No se pudo eliminar.')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'No se pudo eliminar.'))
     }
   }
 

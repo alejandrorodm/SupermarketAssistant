@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getErrorMessage } from '../lib/errors'
 import { Camera, Image as ImageIcon, Loader2, X, ChevronLeft } from 'lucide-react'
 import { procesarTicketConGemini } from '../lib/gemini'
 
@@ -44,8 +45,8 @@ export function Scan() {
       // Al procesar con éxito, pasamos los datos a la página de revisión
       navigate('/review', { state: { ticketData: data, imageSrc } })
 
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err) {
+      setError(getErrorMessage(err))
     } finally {
       setIsProcessing(false)
     }

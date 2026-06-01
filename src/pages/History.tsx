@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ShoppingCart, Calendar, Search, ChevronRight, Receipt } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { getFullStats } from '../lib/stats'
+import { getFullStats, type TicketSummary } from '../lib/stats'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { BottomNav } from '../components/BottomNav'
 import { Skeleton } from '../components/ui/Skeleton'
@@ -11,7 +11,7 @@ import { EmptyState } from '../components/ui/EmptyState'
 export function History() {
   const navigate = useNavigate()
   const { active } = useHousehold()
-  const [historial, setHistorial] = useState<any[]>([])
+  const [historial, setHistorial] = useState<TicketSummary[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [query, setQuery] = useState('')
 
@@ -43,7 +43,7 @@ export function History() {
 
   // Agrupar por mes
   const grupos = useMemo(() => {
-    const map: Record<string, { label: string; total: number; tickets: any[] }> = {}
+    const map: Record<string, { label: string; total: number; tickets: TicketSummary[] }> = {}
     filtrados.forEach((t) => {
       const d = new Date(t.fecha)
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`

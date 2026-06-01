@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { getErrorMessage } from '../lib/errors'
 import { ChevronLeft, Save, Loader2, Users, Split, User } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { guardarTicketEnSupabase } from '../lib/tickets'
@@ -31,6 +32,8 @@ export function Review() {
       navigate('/scan')
       return
     }
+    // Inicializa el formulario con los datos pasados por navegación.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTicketData(location.state.ticketData)
     setImageSrc(location.state.imageSrc)
   }, [location, navigate])
@@ -73,8 +76,8 @@ export function Review() {
       await guardarTicketEnSupabase(ticketData, imageSrc || '', userId, household)
       toast.success('¡Ticket guardado correctamente!')
       navigate('/')
-    } catch (err: any) {
-      toast.error(err.message || 'No se pudo guardar el ticket.')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'No se pudo guardar el ticket.'))
     } finally {
       setIsSaving(false)
     }

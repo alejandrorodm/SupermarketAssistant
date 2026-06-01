@@ -16,7 +16,7 @@ import { TrendingUp as TrendingUpIcon, ArrowUpRight } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts'
 import { supabase } from '../lib/supabase'
 import { getDashboardStats, getPriceAlerts } from '../lib/stats'
-import type { CategoryData, PriceAlert } from '../lib/stats'
+import type { CategoryData, PriceAlert, TicketSummary } from '../lib/stats'
 import { getBudget } from '../lib/budget'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { BottomNav } from '../components/BottomNav'
@@ -26,7 +26,7 @@ import { EmptyState } from '../components/ui/EmptyState'
 
 interface DashboardData {
   totalGastado: number
-  ticketsRecientes: any[]
+  ticketsRecientes: TicketSummary[]
   categorias: CategoryData[]
   numTickets: number
   ticketMedio: number

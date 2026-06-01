@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { getErrorMessage } from '../lib/errors'
 import { ChevronLeft, Save, Loader2 } from 'lucide-react'
 import { getTicketDetails } from '../lib/stats'
 import { actualizarTicketEnSupabase } from '../lib/tickets'
 import { TicketForm } from '../components/TicketForm'
 import { useToast } from '../contexts/ToastContext'
 import type { TicketData } from '../lib/gemini'
+
+interface TicketItemRow {
+  producto_nombre: string
+  cantidad: number
+  precio_unitario: number
+  categoria: string
+}
 
 export function EditTicket() {
   const { id } = useParams<{ id: string }>()
@@ -25,7 +33,7 @@ export function EditTicket() {
           supermercado: ticket.supermercado || '',
           fecha: (ticket.fecha || '').slice(0, 10),
           total: Number(ticket.total) || 0,
-          items: (items || []).map((it: any) => ({
+          items: (items || []).map((it: TicketItemRow) => ({
             producto_nombre: it.producto_nombre,
             cantidad: Number(it.cantidad),
             precio_unitario: Number(it.precio_unitario),
@@ -50,8 +58,8 @@ export function EditTicket() {
       await actualizarTicketEnSupabase(id, ticketData)
       toast.success('Cambios guardados.')
       navigate(`/ticket/${id}`, { replace: true })
-    } catch (err: any) {
-      toast.error(err.message || 'No se pudo guardar.')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'No se pudo guardar.'))
     } finally {
       setIsSaving(false)
     }

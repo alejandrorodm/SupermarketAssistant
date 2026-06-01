@@ -75,7 +75,10 @@ export async function procesarTicketConGemini(base64Image: string, mimeType: str
     return JSON.parse(text) as TicketData
   } catch (error) {
     console.error('Error procesando ticket con Gemini:', error)
-    throw new Error('No se pudo extraer la información del ticket. Revisa la imagen e inténtalo de nuevo.')
+    throw new Error(
+      'No se pudo extraer la información del ticket. Revisa la imagen e inténtalo de nuevo.',
+      { cause: error },
+    )
   }
 }
 
@@ -133,6 +136,8 @@ Devuelve EXCLUSIVAMENTE un objeto JSON, sin markdown ni texto adicional, con est
     return JSON.parse(text) as ListaCompraIA
   } catch (error) {
     console.error('Error generando lista de compra con IA:', error)
-    throw new Error('No se pudo generar la lista inteligente. Inténtalo de nuevo en unos segundos.')
+    throw new Error('No se pudo generar la lista inteligente. Inténtalo de nuevo en unos segundos.', {
+      cause: error,
+    })
   }
 }

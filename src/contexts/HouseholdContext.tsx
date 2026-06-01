@@ -54,6 +54,8 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   useEffect(() => {
+    // Carga inicial de hogares al montar / cambiar de usuario.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh()
   }, [refresh])
 
