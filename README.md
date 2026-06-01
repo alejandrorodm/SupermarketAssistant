@@ -52,12 +52,26 @@ VITE_GEMINI_API_KEY=...
 
 ## 🗄️ Esquema de base de datos (Supabase)
 
-- **tickets** — `id`, `user_id`, `supermercado`, `fecha`, `total`, `ticket_image_url`
+- **tickets** — `id`, `user_id`, `supermercado`, `fecha`, `total`, `ticket_image_url`,
+  `household_id`, `paid_by`, `split_mode`
 - **ticket_items** — `id`, `ticket_id`, `producto_nombre`, `cantidad`, `precio_unitario`, `categoria`
 
 > Recomendado: configurar `ON DELETE CASCADE` en `ticket_items.ticket_id` y
 > políticas RLS por `user_id`. El presupuesto mensual se guarda en el dispositivo
 > (localStorage), no requiere cambios de esquema.
+
+### Cuentas conjuntas / hogares (estilo Splitwise)
+
+Permite compartir gastos en pareja o grupo: invitar por email, marcar quién pagó
+cada ticket (entero o a medias) y cuadrar cuentas con balances «quién debe a quién».
+
+Tablas: **profiles**, **households**, **household_members**, **household_invites**,
+**household_settlements** (Bizums), más las columnas `household_id` / `paid_by` /
+`split_mode` en `tickets`.
+
+> **Migración:** ejecuta `supabase/migrations/0001_households.sql` en el SQL Editor
+> de Supabase (es idempotente y no toca tus datos). Crea las tablas, la función
+> `is_household_member`, los RPCs y las políticas RLS necesarias.
 
 ## 📱 Android (Capacitor)
 
