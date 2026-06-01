@@ -395,6 +395,49 @@ export interface PriceAlert {
 const ALERT_MIN_PCT = 5 // % mínimo de subida
 const ALERT_MIN_ABS = 0.1 // € mínimos de subida absoluta
 
+export interface PricePoint {
+  price: number
+  date: string
+  supermercado: string
+  categoria: string
+  nombre: string
+}
+
+/**
+ * Lógica pura: dado el historial de precios agrupado por producto, compara la
+ * última compra de cada producto con la anterior y devuelve las subidas que
+ * superan los umbrales, ordenadas de mayor a menor variación.
+ */
+export function detectPriceIncreases(
+  historial: Record<string, PricePoint[]>,
+  limit = 20,
+): PriceAlert[] {
+  const alertas: PriceAlert[] = []
+  Object.values(historial).forEach((puntos) => {
+    if (puntos.length < 2) return
+    puntos.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    const actual = puntos[puntos.length - 1]
+    const anterior = puntos[puntos.length - 2]
+    if (anterior.price <= 0) return
+
+    const diff = actual.price - anterior.price
+    const pct = (diff / anterior.price) * 100
+    if (diff >= ALERT_MIN_ABS && pct >= ALERT_MIN_PCT) {
+      alertas.push({
+        producto_nombre: actual.nombre,
+        categoria: actual.categoria,
+        precioAntes: Number(anterior.price.toFixed(2)),
+        precioAhora: Number(actual.price.toFixed(2)),
+        variacionPct: Number(pct.toFixed(0)),
+        supermercadoAhora: actual.supermercado,
+        fechaAntes: anterior.date,
+        fechaAhora: actual.date,
+      })
+    }
+  })
+  return alertas.sort((a, b) => b.variacionPct - a.variacionPct).slice(0, limit)
+}
+
 /**
  * Detecta productos cuyo precio en la última compra ha subido respecto a la
  * compra anterior del mismo producto, por encima de los umbrales definidos.
@@ -425,14 +468,7 @@ export async function getPriceAlerts(
   if (itemsError) throw itemsError
 
   // Agrupar el historial de precios por nombre normalizado de producto.
-  interface Point {
-    price: number
-    date: string
-    supermercado: string
-    categoria: string
-    nombre: string
-  }
-  const historial: Record<string, Point[]> = {}
+  const historial: Record<string, PricePoint[]> = {}
   ;(items || []).forEach((it) => {
     const nombre = (it.producto_nombre || '').trim()
     if (!nombre) return
@@ -449,30 +485,5 @@ export async function getPriceAlerts(
     })
   })
 
-  const alertas: PriceAlert[] = []
-  Object.values(historial).forEach((puntos) => {
-    if (puntos.length < 2) return
-    // Ordenar cronológicamente y comparar las dos últimas compras.
-    puntos.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    const actual = puntos[puntos.length - 1]
-    const anterior = puntos[puntos.length - 2]
-    if (anterior.price <= 0) return
-
-    const diff = actual.price - anterior.price
-    const pct = (diff / anterior.price) * 100
-    if (diff >= ALERT_MIN_ABS && pct >= ALERT_MIN_PCT) {
-      alertas.push({
-        producto_nombre: actual.nombre,
-        categoria: actual.categoria,
-        precioAntes: Number(anterior.price.toFixed(2)),
-        precioAhora: Number(actual.price.toFixed(2)),
-        variacionPct: Number(pct.toFixed(0)),
-        supermercadoAhora: actual.supermercado,
-        fechaAntes: anterior.date,
-        fechaAhora: actual.date,
-      })
-    }
-  })
-
-  return alertas.sort((a, b) => b.variacionPct - a.variacionPct).slice(0, limit)
+  return detectPriceIncreases(historial, limit)
 }

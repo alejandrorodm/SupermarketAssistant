@@ -291,7 +291,7 @@ export async function deleteSettlement(id: string): Promise<void> {
  * Convierte saldos netos en una lista mínima de pagos (greedy settle-up).
  * net > 0 => le deben; net < 0 => debe.
  */
-function computeDebts(
+export function computeDebts(
   net: Record<string, number>,
   names: Record<string, string>,
 ): Debt[] {
