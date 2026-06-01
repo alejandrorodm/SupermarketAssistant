@@ -14,6 +14,7 @@ import { History } from './pages/History'
 import { EditTicket } from './pages/EditTicket'
 import { Households } from './pages/Households'
 import { Balance } from './pages/Balance'
+import { Goals } from './pages/Goals'
 import type { Session } from '@supabase/supabase-js'
 
 function App() {
@@ -62,6 +63,7 @@ function App() {
         <Route path="/settings" element={protect(<Settings />)} />
         <Route path="/households" element={protect(<Households />)} />
         <Route path="/balance" element={protect(<Balance />)} />
+        <Route path="/goals" element={protect(<Goals />)} />
         <Route path="/ticket/:id" element={protect(<TicketDetail />)} />
         <Route path="/ticket/:id/edit" element={protect(<EditTicket />)} />
 
