@@ -22,9 +22,14 @@ export function Auth() {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
       } else {
-        const { error } = await supabase.auth.signUp({ email, password })
+        const { data, error } = await supabase.auth.signUp({ email, password })
         if (error) throw error
-        setMessage('Revisa tu correo para confirmar el registro.')
+        // Si la confirmación de email está desactivada, signUp ya devuelve
+        // sesión y el usuario entra directo (App.tsx redirige). Solo mostramos
+        // el aviso del correo cuando de verdad hace falta confirmar.
+        if (!data.session) {
+          setMessage('Revisa tu correo para confirmar el registro.')
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error durante la autenticación')
