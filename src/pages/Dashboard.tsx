@@ -12,10 +12,11 @@ import {
   Users,
   Home,
 } from 'lucide-react'
+import { TrendingUp as TrendingUpIcon, ArrowUpRight } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts'
 import { supabase } from '../lib/supabase'
-import { getDashboardStats } from '../lib/stats'
-import type { CategoryData } from '../lib/stats'
+import { getDashboardStats, getPriceAlerts } from '../lib/stats'
+import type { CategoryData, PriceAlert } from '../lib/stats'
 import { getBudget } from '../lib/budget'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { BottomNav } from '../components/BottomNav'
@@ -35,6 +36,7 @@ export function Dashboard() {
   const navigate = useNavigate()
   const { active } = useHousehold()
   const [data, setData] = useState<DashboardData | null>(null)
+  const [alerts, setAlerts] = useState<PriceAlert[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [userName, setUserName] = useState<string>('')
   const [budget, setBudgetState] = useState<number | null>(null)
@@ -50,8 +52,12 @@ export function Dashboard() {
         if (user) {
           setUserName(user.email?.split('@')[0] || 'Usuario')
           setBudgetState(getBudget(user.id))
-          const stats = await getDashboardStats(user.id, householdId)
+          const [stats, al] = await Promise.all([
+            getDashboardStats(user.id, householdId),
+            getPriceAlerts(user.id, householdId),
+          ])
           setData(stats as DashboardData)
+          setAlerts(al)
         }
       } catch (err) {
         console.error(err)
@@ -240,6 +246,41 @@ export function Dashboard() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Alertas de subida de precio */}
+            {alerts.length > 0 && (
+              <div className="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-amber-200 dark:border-amber-900/40 animate-fade-in-up">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                    <TrendingUpIcon size={17} />
+                  </div>
+                  <h3 className="font-bold text-slate-900 dark:text-white">Han subido de precio</h3>
+                </div>
+                <div className="space-y-2.5">
+                  {alerts.slice(0, 3).map((a, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white truncate capitalize">
+                          {a.producto_nombre}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {a.precioAntes.toFixed(2)}€ → {a.precioAhora.toFixed(2)}€ · {a.supermercadoAhora}
+                        </p>
+                      </div>
+                      <span className="shrink-0 inline-flex items-center gap-0.5 text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-2 py-1 rounded-lg">
+                        <ArrowUpRight size={13} />
+                        {a.variacionPct}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {alerts.length > 3 && (
+                  <p className="text-xs text-slate-400 mt-3">
+                    Y {alerts.length - 3} producto{alerts.length - 3 > 1 ? 's' : ''} más con subidas.
+                  </p>
+                )}
               </div>
             )}
 

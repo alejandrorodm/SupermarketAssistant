@@ -379,3 +379,100 @@ export async function getExportData(userId: string): Promise<ExportRow[]> {
     }
   })
 }
+
+export interface PriceAlert {
+  producto_nombre: string
+  categoria: string
+  precioAntes: number
+  precioAhora: number
+  variacionPct: number
+  supermercadoAhora: string
+  fechaAntes: string
+  fechaAhora: string
+}
+
+// Umbrales para evitar ruido por redondeo / errores de OCR.
+const ALERT_MIN_PCT = 5 // % mínimo de subida
+const ALERT_MIN_ABS = 0.1 // € mínimos de subida absoluta
+
+/**
+ * Detecta productos cuyo precio en la última compra ha subido respecto a la
+ * compra anterior del mismo producto, por encima de los umbrales definidos.
+ * Usa el historial existente de `ticket_items`. Ordena de mayor a menor subida.
+ */
+export async function getPriceAlerts(
+  userId: string,
+  householdId?: string | null,
+  limit = 20,
+): Promise<PriceAlert[]> {
+  let ticketsQuery = supabase.from('tickets').select('id, supermercado, fecha')
+  ticketsQuery = householdId
+    ? ticketsQuery.eq('household_id', householdId)
+    : ticketsQuery.eq('user_id', userId)
+  const { data: tickets, error: ticketsError } = await ticketsQuery
+  if (ticketsError) throw ticketsError
+  if (!tickets || tickets.length === 0) return []
+
+  const ticketMap: Record<string, { supermercado: string; fecha: string }> = {}
+  tickets.forEach((t) => {
+    ticketMap[t.id] = { supermercado: t.supermercado, fecha: t.fecha }
+  })
+
+  const { data: items, error: itemsError } = await supabase
+    .from('ticket_items')
+    .select('ticket_id, producto_nombre, categoria, precio_unitario')
+    .in('ticket_id', Object.keys(ticketMap))
+  if (itemsError) throw itemsError
+
+  // Agrupar el historial de precios por nombre normalizado de producto.
+  interface Point {
+    price: number
+    date: string
+    supermercado: string
+    categoria: string
+    nombre: string
+  }
+  const historial: Record<string, Point[]> = {}
+  ;(items || []).forEach((it) => {
+    const nombre = (it.producto_nombre || '').trim()
+    if (!nombre) return
+    const t = ticketMap[it.ticket_id]
+    if (!t) return
+    const key = nombre.toLowerCase()
+    if (!historial[key]) historial[key] = []
+    historial[key].push({
+      price: Number(it.precio_unitario),
+      date: t.fecha,
+      supermercado: t.supermercado || 'Otros',
+      categoria: it.categoria || 'Otros',
+      nombre,
+    })
+  })
+
+  const alertas: PriceAlert[] = []
+  Object.values(historial).forEach((puntos) => {
+    if (puntos.length < 2) return
+    // Ordenar cronológicamente y comparar las dos últimas compras.
+    puntos.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    const actual = puntos[puntos.length - 1]
+    const anterior = puntos[puntos.length - 2]
+    if (anterior.price <= 0) return
+
+    const diff = actual.price - anterior.price
+    const pct = (diff / anterior.price) * 100
+    if (diff >= ALERT_MIN_ABS && pct >= ALERT_MIN_PCT) {
+      alertas.push({
+        producto_nombre: actual.nombre,
+        categoria: actual.categoria,
+        precioAntes: Number(anterior.price.toFixed(2)),
+        precioAhora: Number(actual.price.toFixed(2)),
+        variacionPct: Number(pct.toFixed(0)),
+        supermercadoAhora: actual.supermercado,
+        fechaAntes: anterior.date,
+        fechaAhora: actual.date,
+      })
+    }
+  })
+
+  return alertas.sort((a, b) => b.variacionPct - a.variacionPct).slice(0, limit)
+}
