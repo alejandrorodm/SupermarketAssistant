@@ -1,73 +1,73 @@
-# React + TypeScript + Vite
+# 🧾 TicketSaver
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Asistente de compra que escanea tickets de supermercado con IA, controla tu
+presupuesto y te ayuda a ahorrar. Construido con React + TypeScript + Vite,
+Supabase y la API de Google Gemini. Funciona como PWA y como app Android (Capacitor).
 
-Currently, two official plugins are available:
+## ✨ Funcionalidades
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Escaneo con IA** — fotografía un ticket y Gemini extrae supermercado, fecha,
+  total y el desglose de productos (con categorías y nombres limpios).
+- **Revisión y edición** — corrige los datos extraídos antes de guardar, y edita
+  o elimina cualquier ticket guardado más tarde.
+- **Panel de control** — gasto del mes, ticket medio, nº de tickets y desglose
+  por categorías.
+- **Presupuesto mensual** — define un límite y recibe avisos visuales al
+  acercarte o superarlo.
+- **Estadísticas** — evolución del gasto de los últimos 6 meses, gasto por
+  supermercado y por categoría, e historial completo agrupado por mes.
+- **Comparador de precios** — busca un producto y descubre dónde te salió más barato.
+- **Lista de la compra inteligente** — la IA analiza tus hábitos y sugiere qué
+  comprar, estimando el gasto.
+- **Exportar a CSV** — descarga todos tus tickets y productos.
+- **Modo claro / oscuro** y diseño responsive, listo para móvil.
 
-## React Compiler
+## 🚀 Puesta en marcha
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Requisitos: **Node 22+**.
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev          # servidor de desarrollo en http://localhost:5173
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Variables de entorno
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Crea un archivo `.env.local` en la raíz:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=...
+VITE_GEMINI_API_KEY=...
+```
+
+### Scripts
+
+| Script            | Descripción                          |
+| ----------------- | ------------------------------------ |
+| `npm run dev`     | Servidor de desarrollo (Vite + HMR)  |
+| `npm run build`   | Build de producción en `dist/`       |
+| `npm run preview` | Sirve el build de producción         |
+| `npm run lint`    | Linter (ESLint)                      |
+
+## 🗄️ Esquema de base de datos (Supabase)
+
+- **tickets** — `id`, `user_id`, `supermercado`, `fecha`, `total`, `ticket_image_url`
+- **ticket_items** — `id`, `ticket_id`, `producto_nombre`, `cantidad`, `precio_unitario`, `categoria`
+
+> Recomendado: configurar `ON DELETE CASCADE` en `ticket_items.ticket_id` y
+> políticas RLS por `user_id`. El presupuesto mensual se guarda en el dispositivo
+> (localStorage), no requiere cambios de esquema.
+
+## 📱 Android (Capacitor)
+
+```bash
+npm run build
+npx cap sync android
+npx cap open android
+```
+
+## 🛠️ Stack
+
+React 19 · TypeScript · Vite · Tailwind CSS v4 · Supabase · Google Gemini ·
+Recharts · Lucide · Capacitor · vite-plugin-pwa
