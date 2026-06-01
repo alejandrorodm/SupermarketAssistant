@@ -3,22 +3,27 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ShoppingCart, Calendar, Search, ChevronRight, Receipt } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { getFullStats } from '../lib/stats'
+import { useHousehold } from '../contexts/HouseholdContext'
 import { BottomNav } from '../components/BottomNav'
 import { Skeleton } from '../components/ui/Skeleton'
 import { EmptyState } from '../components/ui/EmptyState'
 
 export function History() {
   const navigate = useNavigate()
+  const { active } = useHousehold()
   const [historial, setHistorial] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [query, setQuery] = useState('')
 
+  const householdId = active?.id ?? null
+
   useEffect(() => {
     async function load() {
+      setIsLoading(true)
       try {
         const { data: sessionData } = await supabase.auth.getSession()
         if (sessionData?.session?.user) {
-          const stats = await getFullStats(sessionData.session.user.id)
+          const stats = await getFullStats(sessionData.session.user.id, householdId)
           setHistorial(stats.historial)
         }
       } catch (err) {
@@ -28,7 +33,7 @@ export function History() {
       }
     }
     load()
-  }, [])
+  }, [householdId])
 
   const filtrados = useMemo(() => {
     if (!query.trim()) return historial

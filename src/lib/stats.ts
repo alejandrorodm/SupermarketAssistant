@@ -16,17 +16,20 @@ export const categoryColors: Record<string, string> = {
   'Otros': '#94a3b8' // slate-400
 }
 
-export async function getDashboardStats(userId: string) {
+export async function getDashboardStats(userId: string, householdId?: string | null) {
   try {
     const now = new Date()
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
     const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString()
 
-    // 1. Obtener gasto total del mes actual
-    const { data: ticketsData, error: ticketsError } = await supabase
+    // 1. Obtener gasto total del mes actual (del hogar activo o personal)
+    let ticketsQuery = supabase
       .from('tickets')
       .select('id, total, supermercado, fecha')
-      .eq('user_id', userId)
+    ticketsQuery = householdId
+      ? ticketsQuery.eq('household_id', householdId)
+      : ticketsQuery.eq('user_id', userId)
+    const { data: ticketsData, error: ticketsError } = await ticketsQuery
       .gte('fecha', firstDayOfMonth)
       .lte('fecha', lastDayOfMonth)
       .order('fecha', { ascending: false })
@@ -158,12 +161,15 @@ export async function getTicketDetails(ticketId: string) {
   }
 }
 
-export async function getFullStats(userId: string) {
+export async function getFullStats(userId: string, householdId?: string | null) {
   try {
-    const { data: tickets, error: ticketsError } = await supabase
+    let ticketsQuery = supabase
       .from('tickets')
       .select('id, total, supermercado, fecha')
-      .eq('user_id', userId)
+    ticketsQuery = householdId
+      ? ticketsQuery.eq('household_id', householdId)
+      : ticketsQuery.eq('user_id', userId)
+    const { data: tickets, error: ticketsError } = await ticketsQuery
       .order('fecha', { ascending: false })
 
     if (ticketsError) throw ticketsError
@@ -233,15 +239,19 @@ export interface MonthlyPoint {
  * Evolución del gasto en los últimos `months` meses (incluido el actual),
  * rellenando con 0 los meses sin compras.
  */
-export async function getMonthlyTrend(userId: string, months = 6): Promise<MonthlyPoint[]> {
+export async function getMonthlyTrend(
+  userId: string,
+  months = 6,
+  householdId?: string | null,
+): Promise<MonthlyPoint[]> {
   const now = new Date()
   const start = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1)
 
-  const { data: tickets, error } = await supabase
-    .from('tickets')
-    .select('total, fecha')
-    .eq('user_id', userId)
-    .gte('fecha', start.toISOString())
+  let trendQuery = supabase.from('tickets').select('total, fecha')
+  trendQuery = householdId
+    ? trendQuery.eq('household_id', householdId)
+    : trendQuery.eq('user_id', userId)
+  const { data: tickets, error } = await trendQuery.gte('fecha', start.toISOString())
 
   if (error) throw error
 

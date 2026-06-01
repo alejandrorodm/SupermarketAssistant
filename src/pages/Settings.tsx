@@ -10,6 +10,8 @@ import {
   Check,
   Loader2,
   Mail,
+  Users,
+  ChevronRight,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useUser } from '../hooks/useUser'
@@ -100,6 +102,26 @@ export function Settings() {
               <p className="text-xs text-slate-400">Sesión activa</p>
             </div>
           </div>
+        </section>
+
+        {/* Hogares compartidos */}
+        <section>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 px-1">
+            Cuentas compartidas
+          </h2>
+          <button
+            onClick={() => navigate('/households')}
+            className="w-full bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 flex items-center gap-3 hover:border-indigo-500 transition-colors"
+          >
+            <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+              <Users size={18} />
+            </div>
+            <div className="text-left flex-1">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">Hogares</p>
+              <p className="text-xs text-slate-400">Comparte gastos y cuadra cuentas en pareja o grupo</p>
+            </div>
+            <ChevronRight size={18} className="text-slate-300 dark:text-slate-600" />
+          </button>
         </section>
 
         {/* Presupuesto */}

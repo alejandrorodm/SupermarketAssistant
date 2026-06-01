@@ -9,12 +9,15 @@ import {
   Receipt,
   Wallet,
   Sparkles,
+  Users,
+  Home,
 } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts'
 import { supabase } from '../lib/supabase'
 import { getDashboardStats } from '../lib/stats'
 import type { CategoryData } from '../lib/stats'
 import { getBudget } from '../lib/budget'
+import { useHousehold } from '../contexts/HouseholdContext'
 import { BottomNav } from '../components/BottomNav'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { Skeleton } from '../components/ui/Skeleton'
@@ -30,20 +33,24 @@ interface DashboardData {
 
 export function Dashboard() {
   const navigate = useNavigate()
+  const { active } = useHousehold()
   const [data, setData] = useState<DashboardData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [userName, setUserName] = useState<string>('')
   const [budget, setBudgetState] = useState<number | null>(null)
 
+  const householdId = active?.id ?? null
+
   useEffect(() => {
     async function loadData() {
+      setIsLoading(true)
       try {
         const { data: sessionData } = await supabase.auth.getSession()
         const user = sessionData?.session?.user
         if (user) {
           setUserName(user.email?.split('@')[0] || 'Usuario')
           setBudgetState(getBudget(user.id))
-          const stats = await getDashboardStats(user.id)
+          const stats = await getDashboardStats(user.id, householdId)
           setData(stats as DashboardData)
         }
       } catch (err) {
@@ -53,7 +60,7 @@ export function Dashboard() {
       }
     }
     loadData()
-  }, [])
+  }, [householdId])
 
   const currentMonth = new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(new Date())
   const gastado = data?.totalGastado ?? 0
@@ -69,6 +76,17 @@ export function Dashboard() {
         <div>
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Hola de nuevo,</p>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white capitalize">{userName || '—'}</h1>
+          <button
+            onClick={() => navigate('/households')}
+            className={`mt-1.5 inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${
+              active
+                ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200'
+                : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+            }`}
+          >
+            {active ? <Users size={13} /> : <Home size={13} />}
+            {active ? active.name : 'Personal'}
+          </button>
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />

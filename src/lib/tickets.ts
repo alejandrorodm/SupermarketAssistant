@@ -1,5 +1,12 @@
 import { supabase } from './supabase'
 import type { TicketData } from './gemini'
+import type { SplitMode } from './households'
+
+export interface TicketHouseholdOptions {
+  householdId?: string | null
+  paidBy?: string | null
+  splitMode?: SplitMode
+}
 
 function base64ToBlob(base64: string, mimeType: string): Blob {
   const byteCharacters = atob(base64)
@@ -12,9 +19,10 @@ function base64ToBlob(base64: string, mimeType: string): Blob {
 }
 
 export async function guardarTicketEnSupabase(
-  ticketData: TicketData, 
-  base64Image: string, 
-  userId: string
+  ticketData: TicketData,
+  base64Image: string,
+  userId: string,
+  household?: TicketHouseholdOptions,
 ): Promise<string> {
   try {
     let ticketImageUrl = null
@@ -57,7 +65,10 @@ export async function guardarTicketEnSupabase(
         supermercado: ticketData.supermercado,
         fecha: ticketData.fecha,
         total: ticketData.total,
-        ticket_image_url: ticketImageUrl
+        ticket_image_url: ticketImageUrl,
+        household_id: household?.householdId ?? null,
+        paid_by: household?.householdId ? household?.paidBy ?? userId : null,
+        split_mode: household?.householdId ? household?.splitMode ?? 'shared' : 'personal',
       })
       .select('id')
       .single()

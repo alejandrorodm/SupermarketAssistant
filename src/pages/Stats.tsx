@@ -31,10 +31,12 @@ import { downloadCSV } from '../lib/export'
 import { Skeleton } from '../components/ui/Skeleton'
 import { EmptyState } from '../components/ui/EmptyState'
 import { useToast } from '../contexts/ToastContext'
+import { useHousehold } from '../contexts/HouseholdContext'
 
 export function Stats() {
   const navigate = useNavigate()
   const toast = useToast()
+  const { active } = useHousehold()
   const [isLoading, setIsLoading] = useState(true)
   const [isExporting, setIsExporting] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
@@ -46,14 +48,20 @@ export function Stats() {
     gastoPorCategoria: any[]
   } | null>(null)
 
+  const householdId = active?.id ?? null
+
   useEffect(() => {
     async function loadStats() {
+      setIsLoading(true)
       try {
         const { data: sessionData } = await supabase.auth.getSession()
         const user = sessionData?.session?.user
         if (user) {
           setUserId(user.id)
-          const [stats, t] = await Promise.all([getFullStats(user.id), getMonthlyTrend(user.id, 6)])
+          const [stats, t] = await Promise.all([
+            getFullStats(user.id, householdId),
+            getMonthlyTrend(user.id, 6, householdId),
+          ])
           setData(stats)
           setTrend(t)
         }
@@ -64,7 +72,7 @@ export function Stats() {
       }
     }
     loadStats()
-  }, [])
+  }, [householdId])
 
   const handleExport = async () => {
     if (!userId) return
