@@ -2,14 +2,17 @@ import { useEffect, useState } from 'react'
 import { Sparkles, Loader2, RefreshCw, Lightbulb, Check, ShoppingBasket } from 'lucide-react'
 import { useUser } from '../hooks/useUser'
 import { getProductosFrecuentes, categoryColors } from '../lib/stats'
+import { getInventory } from '../lib/inventory'
 import { getErrorMessage } from '../lib/errors'
 import { generarListaCompraIA, type ListaCompraIA } from '../lib/gemini'
 import { BottomNav } from '../components/BottomNav'
 import { EmptyState } from '../components/ui/EmptyState'
 import { useToast } from '../contexts/ToastContext'
+import { useHousehold } from '../contexts/HouseholdContext'
 
 export function ShoppingList() {
   const { user } = useUser()
+  const { active } = useHousehold()
   const toast = useToast()
   const [lista, setLista] = useState<ListaCompraIA | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -28,8 +31,15 @@ export function ShoppingList() {
     setIsGenerating(true)
     setChecked(new Set())
     try {
-      const productos = await getProductosFrecuentes(user.id)
-      const result = await generarListaCompraIA(productos)
+      const [productos, inventario] = await Promise.all([
+        getProductosFrecuentes(user.id),
+        getInventory({ userId: user.id, householdId: active?.id ?? null }).catch(() => []),
+      ])
+      const disponible = inventario.map((i) => ({
+        producto_nombre: i.producto_nombre,
+        cantidad: i.cantidad,
+      }))
+      const result = await generarListaCompraIA(productos, disponible)
       setLista(result)
     } catch (err) {
       toast.error(getErrorMessage(err, 'No se pudo generar la lista.'))

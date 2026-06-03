@@ -102,14 +102,32 @@ export interface ListaCompraIA {
   consejo: string
 }
 
+/** Producto disponible en la despensa, usado para no sugerir lo que ya hay. */
+export interface InventarioDisponible {
+  producto_nombre: string
+  cantidad: number
+}
+
 /**
  * Genera una lista de la compra inteligente a partir del historial de productos
- * más frecuentes del usuario, prediciendo el gasto aproximado.
+ * más frecuentes del usuario, prediciendo el gasto aproximado. Si se le pasa el
+ * inventario actual, evita sugerir lo que ya hay en la despensa y prioriza
+ * reponer lo agotado.
  */
-export async function generarListaCompraIA(productos: ProductoFrecuente[]): Promise<ListaCompraIA> {
+export async function generarListaCompraIA(
+  productos: ProductoFrecuente[],
+  inventario: InventarioDisponible[] = [],
+): Promise<ListaCompraIA> {
   if (productos.length === 0) {
     throw new Error('Necesitas escanear algunos tickets antes de generar una lista inteligente.')
   }
+
+  const bloqueInventario =
+    inventario.length > 0
+      ? `\n\nEl usuario YA TIENE estos productos en su despensa (no hace falta volver a comprarlos salvo que la cantidad sea muy baja):\n${inventario
+          .map((i) => `- ${i.producto_nombre}: ${i.cantidad} en stock`)
+          .join('\n')}\n\nNO incluyas en la lista los productos de los que ya haya stock suficiente; céntrate en lo que falta o se ha agotado.`
+      : ''
 
   const prompt = `
 Eres un asistente de compra de supermercado para un usuario español. A continuación tienes su historial de productos comprados con la frecuencia (número de veces que aparece) y el precio medio pagado en euros:
@@ -117,6 +135,7 @@ Eres un asistente de compra de supermercado para un usuario español. A continua
 ${productos
   .map((p) => `- ${p.producto_nombre} (${p.categoria}): comprado ${p.veces} veces, precio medio ${p.precio_medio.toFixed(2)}€`)
   .join('\n')}
+${bloqueInventario}
 
 Basándote en estos hábitos, genera una lista de la compra recomendada para la próxima visita al supermercado. Prioriza los productos más recurrentes (los básicos que probablemente necesite reponer) y equilibra las categorías. Incluye entre 8 y 15 productos.
 

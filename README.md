@@ -18,7 +18,10 @@ Supabase y la API de Google Gemini. Funciona como PWA y como app Android (Capaci
   supermercado y por categoría, e historial completo agrupado por mes.
 - **Comparador de precios** — busca un producto y descubre dónde te salió más barato.
 - **Lista de la compra inteligente** — la IA analiza tus hábitos y sugiere qué
-  comprar, estimando el gasto.
+  comprar, estimando el gasto y teniendo en cuenta lo que ya tienes en la despensa.
+- **Inventario / despensa** — se llena solo con cada compra (los productos del
+  ticket entran como stock) y se vacía a mano según vas gastando. Personal o
+  compartido con el hogar.
 - **Exportar a CSV** — descarga todos tus tickets y productos.
 - **Modo claro / oscuro** y diseño responsive, listo para móvil.
 
@@ -72,6 +75,17 @@ Tablas: **profiles**, **households**, **household_members**, **household_invites
 > **Migración:** ejecuta `supabase/migrations/0001_households.sql` en el SQL Editor
 > de Supabase (es idempotente y no toca tus datos). Crea las tablas, la función
 > `is_household_member`, los RPCs y las políticas RLS necesarias.
+
+### Inventario / despensa
+
+Tabla **inventory_items** (`id`, `user_id`, `household_id`, `producto_nombre`,
+`categoria`, `cantidad`). Se rellena automáticamente al guardar un ticket y se
+edita desde la app. La lista de la compra IA la consulta para no sugerir lo que
+ya tienes.
+
+> **Migración:** ejecuta `supabase/migrations/0002_inventory.sql` en el SQL Editor
+> de Supabase (idempotente; depende de la 0001). Crea la tabla y sus políticas RLS
+> (despensa personal por `user_id` y compartida por hogar).
 
 ## 📱 Android (Capacitor)
 

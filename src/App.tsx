@@ -20,6 +20,7 @@ const Households = lazy(() => import('./pages/Households').then((m) => ({ defaul
 const Balance = lazy(() => import('./pages/Balance').then((m) => ({ default: m.Balance })))
 const Goals = lazy(() => import('./pages/Goals').then((m) => ({ default: m.Goals })))
 const BatchScan = lazy(() => import('./pages/BatchScan').then((m) => ({ default: m.BatchScan })))
+const Inventory = lazy(() => import('./pages/Inventory').then((m) => ({ default: m.Inventory })))
 
 function Loader() {
   return (
@@ -74,6 +75,7 @@ function App() {
           <Route path="/households" element={protect(<Households />)} />
           <Route path="/balance" element={protect(<Balance />)} />
           <Route path="/goals" element={protect(<Goals />)} />
+          <Route path="/inventory" element={protect(<Inventory />)} />
           <Route path="/ticket/:id" element={protect(<TicketDetail />)} />
           <Route path="/ticket/:id/edit" element={protect(<EditTicket />)} />
 

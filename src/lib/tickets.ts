@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { getErrorMessage } from './errors'
+import { addPurchaseToInventory } from './inventory'
 import type { TicketData } from './gemini'
 import type { SplitMode } from './households'
 
@@ -91,6 +92,16 @@ export async function guardarTicketEnSupabase(
       .insert(itemsToInsert)
 
     if (itemsError) throw itemsError
+
+    // 4. Alimentar la despensa con lo comprado (no bloquea si falla).
+    await addPurchaseToInventory(
+      ticketData.items.map((item) => ({
+        producto_nombre: item.producto_nombre,
+        categoria: item.categoria,
+        cantidad: item.cantidad,
+      })),
+      { userId, householdId: household?.householdId ?? null },
+    )
 
     return ticketId
   } catch (error) {

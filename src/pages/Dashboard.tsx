@@ -11,6 +11,7 @@ import {
   Sparkles,
   Users,
   Home,
+  Package,
 } from 'lucide-react'
 import { TrendingUp as TrendingUpIcon, ArrowUpRight } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts'
@@ -210,6 +211,21 @@ export function Dashboard() {
                 </div>
               </button>
             </div>
+
+            {/* Acceso al inventario */}
+            <button
+              onClick={() => navigate('/inventory')}
+              className="w-full bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl p-4 flex items-center gap-3 group hover:border-emerald-500 dark:hover:border-emerald-500 transition-all shadow-sm active:scale-95"
+            >
+              <div className="w-11 h-11 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
+                <Package size={22} />
+              </div>
+              <div className="text-left flex-1 min-w-0">
+                <h3 className="font-bold text-slate-900 dark:text-white text-sm">Despensa</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-xs">Lo que tienes en casa, se llena al comprar</p>
+              </div>
+              <ChevronRight size={18} className="text-slate-300 dark:text-slate-600" />
+            </button>
 
             {/* Gráfico de categorías */}
             {data && data.categorias.length > 0 && (
