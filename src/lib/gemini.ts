@@ -108,15 +108,24 @@ export interface InventarioDisponible {
   cantidad: number
 }
 
+export interface ListaCompraOpciones {
+  /** Reglas/instrucciones libres escritas por el usuario. */
+  reglas?: string
+  /** Supermercados conocidos del usuario (para poder filtrar por tienda). */
+  supermercados?: string[]
+}
+
 /**
  * Genera una lista de la compra inteligente a partir del historial de productos
  * más frecuentes del usuario, prediciendo el gasto aproximado. Si se le pasa el
  * inventario actual, evita sugerir lo que ya hay en la despensa y prioriza
- * reponer lo agotado.
+ * reponer lo agotado. `opts.reglas` permite personalizar la lista en lenguaje
+ * natural (ej. "solo de Mercadona", "carne ya tengo").
  */
 export async function generarListaCompraIA(
   productos: ProductoFrecuente[],
   inventario: InventarioDisponible[] = [],
+  opts: ListaCompraOpciones = {},
 ): Promise<ListaCompraIA> {
   if (productos.length === 0) {
     throw new Error('Necesitas escanear algunos tickets antes de generar una lista inteligente.')
@@ -129,15 +138,25 @@ export async function generarListaCompraIA(
           .join('\n')}\n\nNO incluyas en la lista los productos de los que ya haya stock suficiente; céntrate en lo que falta o se ha agotado.`
       : ''
 
+  const bloqueSupermercados =
+    opts.supermercados && opts.supermercados.length > 0
+      ? `\n\nSupermercados donde suele comprar: ${opts.supermercados.join(', ')}. Si el usuario pide centrarse en uno, recomienda productos coherentes con ese supermercado.`
+      : ''
+
+  const reglas = (opts.reglas || '').trim()
+  const bloqueReglas = reglas
+    ? `\n\nREGLAS E INSTRUCCIONES DEL USUARIO (tienen MÁXIMA prioridad, respétalas estrictamente aunque contradigan sus hábitos):\n"""\n${reglas}\n"""`
+    : ''
+
   const prompt = `
 Eres un asistente de compra de supermercado para un usuario español. A continuación tienes su historial de productos comprados con la frecuencia (número de veces que aparece) y el precio medio pagado en euros:
 
 ${productos
   .map((p) => `- ${p.producto_nombre} (${p.categoria}): comprado ${p.veces} veces, precio medio ${p.precio_medio.toFixed(2)}€`)
   .join('\n')}
-${bloqueInventario}
+${bloqueInventario}${bloqueSupermercados}${bloqueReglas}
 
-Basándote en estos hábitos, genera una lista de la compra recomendada para la próxima visita al supermercado. Prioriza los productos más recurrentes (los básicos que probablemente necesite reponer) y equilibra las categorías. Incluye entre 8 y 15 productos.
+Basándote en estos hábitos, genera una lista de la compra recomendada para la próxima visita al supermercado. Prioriza los productos más recurrentes (los básicos que probablemente necesite reponer) y equilibra las categorías. Incluye entre 8 y 15 productos. Si hay reglas del usuario, cúmplelas por encima de todo.
 
 Devuelve EXCLUSIVAMENTE un objeto JSON, sin markdown ni texto adicional, con esta estructura:
 {
@@ -158,5 +177,44 @@ Devuelve EXCLUSIVAMENTE un objeto JSON, sin markdown ni texto adicional, con est
     throw new Error('No se pudo generar la lista inteligente. Inténtalo de nuevo en unos segundos.', {
       cause: error,
     })
+  }
+}
+
+export interface AlternativaProducto {
+  producto_nombre: string
+  motivo: string
+  precio_estimado: number
+}
+
+/**
+ * Sugiere alternativas recomendadas a un producto concreto (ej. pechuga de pollo
+ * → muslos de pollo, pavo, lomo...). Respeta la misma categoría cuando tiene
+ * sentido. Devuelve entre 3 y 5 opciones.
+ */
+export async function sugerirAlternativasProducto(
+  producto_nombre: string,
+  categoria: string,
+): Promise<AlternativaProducto[]> {
+  const prompt = `
+Eres un asistente de compra de supermercado español. El usuario tiene en su lista de la compra el producto "${producto_nombre}" (categoría: ${categoria}) y quiere ver ALTERNATIVAS recomendadas para sustituirlo (por variar, por precio o por nutrición).
+
+Propón entre 3 y 5 productos alternativos razonables y habituales en un supermercado español, dentro de la misma categoría o muy parecidos. No repitas el producto original.
+
+Devuelve EXCLUSIVAMENTE un objeto JSON, sin markdown ni texto adicional:
+{
+  "alternativas": [
+    {"producto_nombre": "Nombre", "motivo": "Breve razón (máx 5 palabras)", "precio_estimado": 0.00}
+  ]
+}
+`
+
+  try {
+    const result = await model.generateContent(prompt)
+    const text = limpiarJSON(result.response.text())
+    const parsed = JSON.parse(text) as { alternativas: AlternativaProducto[] }
+    return parsed.alternativas || []
+  } catch (error) {
+    console.error('Error sugiriendo alternativas con IA:', error)
+    throw new Error('No se pudieron obtener alternativas. Inténtalo de nuevo.', { cause: error })
   }
 }

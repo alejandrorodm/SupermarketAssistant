@@ -279,15 +279,15 @@ export function Households() {
         {active && (
           <>
             <section>
-              <div className="flex items-center justify-between mb-2 px-1">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              <div className="flex items-center justify-between gap-2 mb-2 px-1">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 truncate min-w-0">
                   Miembros de «{active.name}»
                 </h2>
                 <button
                   onClick={() => navigate('/balance')}
-                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1"
+                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1 shrink-0"
                 >
-                  <Scale size={13} /> Ver balance
+                  <Scale size={13} className="shrink-0" /> Ver balance
                 </button>
               </div>
               <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700">

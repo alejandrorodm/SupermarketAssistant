@@ -426,20 +426,20 @@ export function Dashboard() {
                     <button
                       key={i}
                       onClick={() => navigate(`/ticket/${ticket.id}`)}
-                      className="w-full text-left bg-white dark:bg-slate-800 p-4 rounded-2xl flex items-center justify-between shadow-sm border border-slate-100 dark:border-slate-700 hover:border-blue-500 transition-colors"
+                      className="w-full text-left bg-white dark:bg-slate-800 p-4 rounded-2xl flex items-center justify-between gap-3 shadow-sm border border-slate-100 dark:border-slate-700 hover:border-blue-500 transition-colors"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 shrink-0">
                           <ShoppingCart size={18} />
                         </div>
-                        <div>
-                          <p className="font-bold text-slate-900 dark:text-white">{ticket.supermercado}</p>
+                        <div className="min-w-0">
+                          <p className="font-bold text-slate-900 dark:text-white truncate">{ticket.supermercado}</p>
                           <p className="text-xs text-slate-500 dark:text-slate-400">
                             {new Date(ticket.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 shrink-0">
                         <p className="font-bold text-slate-900 dark:text-white">{Number(ticket.total).toFixed(2)} €</p>
                         <ChevronRight size={18} className="text-slate-300 dark:text-slate-600" />
                       </div>

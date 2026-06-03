@@ -46,7 +46,7 @@ export function Compare() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-28">
-      <header className="bg-gradient-to-br from-blue-600 to-indigo-700 px-6 pt-12 pb-8 shadow-lg rounded-b-3xl text-white">
+      <header className="bg-gradient-to-br from-blue-600 to-indigo-700 px-6 pt-12 pb-8 shadow-lg rounded-b-3xl text-white pt-safe">
         <h1 className="text-2xl font-bold mb-2">Comparador</h1>
         <p className="text-blue-100 text-sm mb-6">Busca un producto y descubre dónde es más barato.</p>
         
@@ -110,9 +110,9 @@ export function Compare() {
                     </h3>
                     
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3">
-                      <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 text-sm font-medium">
-                        <MapPin size={16} className="text-blue-500" />
-                        {item.supermercado}
+                      <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 text-sm font-medium min-w-0 max-w-full">
+                        <MapPin size={16} className="text-blue-500 shrink-0" />
+                        <span className="truncate">{item.supermercado}</span>
                       </div>
                       
                       <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500 text-xs">

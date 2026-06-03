@@ -21,12 +21,27 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Salvaguarda anti-desbordamiento horizontal: ninguna caja debe empujar el
+   ancho de la página fuera de la pantalla en móviles estrechos. */
+html,
+body,
+#root {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 /* Safe areas para dispositivos con notch (PWA / Capacitor) */
 .pt-safe {
   padding-top: max(env(safe-area-inset-top), 0px);
 }
 .pb-safe {
   padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+.pl-safe {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+.pr-safe {
+  padding-right: env(safe-area-inset-right, 0px);
 }
 
 /* Scrollbar discreta */

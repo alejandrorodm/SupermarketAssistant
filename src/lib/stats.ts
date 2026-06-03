@@ -375,6 +375,20 @@ export async function getProductosFrecuentes(userId: string, limit = 40): Promis
     .slice(0, limit)
 }
 
+/** Lista de supermercados distintos donde ha comprado el usuario. */
+export async function getSupermercados(userId: string, householdId?: string | null): Promise<string[]> {
+  let q = supabase.from('tickets').select('supermercado')
+  q = householdId ? q.eq('household_id', householdId) : q.eq('user_id', userId)
+  const { data, error } = await q
+  if (error) throw error
+  const set = new Set<string>()
+  ;(data || []).forEach((t) => {
+    const s = (t.supermercado || '').trim()
+    if (s) set.add(s)
+  })
+  return [...set].sort()
+}
+
 export interface ExportRow {
   fecha: string
   supermercado: string

@@ -84,8 +84,8 @@ export function TicketDetail() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-safe">
-      <header className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-lg shadow-sm px-4 py-3.5 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center">
+      <header className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-lg shadow-sm px-4 py-3.5 flex items-center justify-between sticky top-0 z-10 pt-safe">
+        <div className="flex items-center min-w-0">
           <button
             onClick={() => navigate(-1)}
             className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 mr-1 p-1"
@@ -114,14 +114,14 @@ export function TicketDetail() {
 
       <main className="p-5 max-w-3xl mx-auto space-y-5 animate-fade-in">
         <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-6 text-white shadow-lg shadow-blue-600/30">
-          <div className="flex justify-between items-start mb-6">
-            <div>
+          <div className="flex justify-between items-start mb-6 gap-3">
+            <div className="min-w-0">
               <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
-                <ShoppingCart size={24} />
-                {ticket.supermercado}
+                <ShoppingCart size={24} className="shrink-0" />
+                <span className="min-w-0 break-words">{ticket.supermercado}</span>
               </h2>
               <div className="flex items-center gap-1.5 text-blue-100 text-sm font-medium">
-                <Calendar size={16} />
+                <Calendar size={16} className="shrink-0" />
                 {new Date(ticket.fecha).toLocaleDateString('es-ES', {
                   weekday: 'long',
                   year: 'numeric',
@@ -135,7 +135,7 @@ export function TicketDetail() {
                 href={ticket.ticket_image_url}
                 target="_blank"
                 rel="noreferrer"
-                className="bg-white/20 hover:bg-white/30 backdrop-blur-sm px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5"
+                className="bg-white/20 hover:bg-white/30 backdrop-blur-sm px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 shrink-0"
               >
                 <ImageIcon size={14} /> Foto
               </a>
