@@ -5,13 +5,16 @@ import App from './App.tsx'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { ToastProvider } from './contexts/ToastContext'
 import { HouseholdProvider } from './contexts/HouseholdContext'
+import { NotificationsProvider } from './contexts/NotificationsContext'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider>
       <ToastProvider>
         <HouseholdProvider>
-          <App />
+          <NotificationsProvider>
+            <App />
+          </NotificationsProvider>
         </HouseholdProvider>
       </ToastProvider>
     </ThemeProvider>

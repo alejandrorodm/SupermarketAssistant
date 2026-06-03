@@ -29,11 +29,21 @@ export const categoryColors: Record<string, string> = {
   'Otros': '#94a3b8' // slate-400
 }
 
+/** Inicio (lunes 00:00) de la semana ISO que contiene `date`. */
+export function getWeekStart(date: Date): Date {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const day = (d.getDay() + 6) % 7 // 0 = lunes … 6 = domingo
+  d.setDate(d.getDate() - day)
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
 export async function getDashboardStats(userId: string, householdId?: string | null) {
   try {
     const now = new Date()
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
     const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString()
+    const weekStart = getWeekStart(now).toISOString()
 
     // 1. Obtener gasto total del mes actual (del hogar activo o personal)
     let ticketsQuery = supabase
@@ -50,7 +60,22 @@ export async function getDashboardStats(userId: string, householdId?: string | n
     if (ticketsError) throw ticketsError
 
     const totalGastado = ticketsData.reduce((acc, curr) => acc + Number(curr.total), 0)
-    
+
+    // Gasto de la semana en curso (lunes→hoy). La semana puede empezar en el
+    // mes anterior, así que se consulta su propio rango.
+    let gastoSemana = 0
+    {
+      let weekQuery = supabase.from('tickets').select('total, fecha')
+      weekQuery = householdId
+        ? weekQuery.eq('household_id', householdId)
+        : weekQuery.eq('user_id', userId)
+      const { data: weekData, error: weekError } = await weekQuery
+        .gte('fecha', weekStart)
+        .lte('fecha', lastDayOfMonth)
+      if (weekError) throw weekError
+      gastoSemana = (weekData || []).reduce((acc, curr) => acc + Number(curr.total), 0)
+    }
+
     // Obtener los 3 más recientes
     const ticketsRecientes = ticketsData.slice(0, 3)
 
@@ -91,6 +116,7 @@ export async function getDashboardStats(userId: string, householdId?: string | n
 
     return {
       totalGastado,
+      gastoSemana,
       ticketsRecientes,
       categorias,
       numTickets: ticketsData.length,

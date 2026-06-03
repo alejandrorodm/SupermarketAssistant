@@ -12,8 +12,11 @@ Supabase y la API de Google Gemini. Funciona como PWA y como app Android (Capaci
   o elimina cualquier ticket guardado más tarde.
 - **Panel de control** — gasto del mes, ticket medio, nº de tickets y desglose
   por categorías.
-- **Presupuesto mensual** — define un límite y recibe avisos visuales al
-  acercarte o superarlo.
+- **Presupuesto mensual y semanal** — define límites de gasto y recibe avisos al
+  acercarte (80%) o superarlos, en el panel y en notificaciones.
+- **Notificaciones in-app** — campana con avisos de presupuesto y cuando alguien
+  de tu hogar sube un ticket (en tiempo real mientras la app está abierta).
+- **Apodo** — elige cómo te ves en la app y en tu hogar (no el usuario del email).
 - **Estadísticas** — evolución del gasto de los últimos 6 meses, gasto por
   supermercado y por categoría, e historial completo agrupado por mes.
 - **Comparador de precios** — busca un producto y descubre dónde te salió más barato.
@@ -86,6 +89,17 @@ ya tienes.
 > **Migración:** ejecuta `supabase/migrations/0002_inventory.sql` en el SQL Editor
 > de Supabase (idempotente; depende de la 0001). Crea la tabla y sus políticas RLS
 > (despensa personal por `user_id` y compartida por hogar).
+
+### Notificaciones in-app
+
+Avisos de presupuesto (semanal/mensual, calculados en el cliente) y aviso cuando
+otro miembro del hogar sube un ticket (vía Supabase Realtime sobre `tickets`).
+El apodo se guarda en `profiles.display_name`; los presupuestos en localStorage.
+
+> **Migración:** ejecuta `supabase/migrations/0003_notifications.sql` en el SQL
+> Editor de Supabase (idempotente; depende de la 0001). Añade `tickets.created_at`
+> y publica `tickets` en Realtime. Sin ella, los avisos de presupuesto siguen
+> funcionando, pero no los de "alguien del hogar subió un ticket".
 
 ## 📱 Android (Capacitor)
 

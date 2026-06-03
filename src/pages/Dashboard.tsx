@@ -12,14 +12,21 @@ import {
   Users,
   Home,
   Package,
+  Bell,
+  Flame,
+  Trophy,
+  CalendarDays,
 } from 'lucide-react'
 import { TrendingUp as TrendingUpIcon, ArrowUpRight } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts'
 import { supabase } from '../lib/supabase'
-import { getDashboardStats, getPriceAlerts } from '../lib/stats'
+import { getDashboardStats, getPriceAlerts, getMonthlyTrend } from '../lib/stats'
 import type { CategoryData, PriceAlert, TicketSummary } from '../lib/stats'
-import { getBudget } from '../lib/budget'
+import { getBudget, getWeeklyBudget } from '../lib/budget'
+import { computeStreak } from '../lib/goals'
+import { getProfile, displayNameOf } from '../lib/profile'
 import { useHousehold } from '../contexts/HouseholdContext'
+import { useNotifications } from '../contexts/NotificationsContext'
 import { BottomNav } from '../components/BottomNav'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { Skeleton } from '../components/ui/Skeleton'
@@ -27,6 +34,7 @@ import { EmptyState } from '../components/ui/EmptyState'
 
 interface DashboardData {
   totalGastado: number
+  gastoSemana: number
   ticketsRecientes: TicketSummary[]
   categorias: CategoryData[]
   numTickets: number
@@ -36,11 +44,14 @@ interface DashboardData {
 export function Dashboard() {
   const navigate = useNavigate()
   const { active } = useHousehold()
+  const { unread } = useNotifications()
   const [data, setData] = useState<DashboardData | null>(null)
   const [alerts, setAlerts] = useState<PriceAlert[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [userName, setUserName] = useState<string>('')
   const [budget, setBudgetState] = useState<number | null>(null)
+  const [weeklyBudget, setWeeklyBudget] = useState<number | null>(null)
+  const [streak, setStreak] = useState(0)
 
   const householdId = active?.id ?? null
 
@@ -51,14 +62,19 @@ export function Dashboard() {
         const { data: sessionData } = await supabase.auth.getSession()
         const user = sessionData?.session?.user
         if (user) {
-          setUserName(user.email?.split('@')[0] || 'Usuario')
-          setBudgetState(getBudget(user.id))
-          const [stats, al] = await Promise.all([
+          const monthlyBudget = getBudget(user.id)
+          setBudgetState(monthlyBudget)
+          setWeeklyBudget(getWeeklyBudget(user.id))
+          const [stats, al, profile, trend] = await Promise.all([
             getDashboardStats(user.id, householdId),
             getPriceAlerts(user.id, householdId),
+            getProfile(user.id),
+            getMonthlyTrend(user.id, 6, householdId),
           ])
+          setUserName(displayNameOf(profile, user.email))
           setData(stats as DashboardData)
           setAlerts(al)
+          setStreak(computeStreak(trend, monthlyBudget))
         }
       } catch (err) {
         console.error(err)
@@ -76,6 +92,14 @@ export function Dashboard() {
   const nearBudget = budget != null && !overBudget && pct >= 80
 
   const barColor = overBudget ? 'bg-red-500' : nearBudget ? 'bg-amber-400' : 'bg-white'
+
+  // Presupuesto semanal
+  const gastoSemana = data?.gastoSemana ?? 0
+  const pctSemana =
+    weeklyBudget && weeklyBudget > 0 ? Math.min((gastoSemana / weeklyBudget) * 100, 100) : 0
+  const overWeek = weeklyBudget != null && gastoSemana > weeklyBudget
+  const nearWeek = weeklyBudget != null && !overWeek && pctSemana >= 80
+  const weekBarColor = overWeek ? 'bg-red-500' : nearWeek ? 'bg-amber-500' : 'bg-emerald-500'
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-28">
@@ -96,6 +120,18 @@ export function Dashboard() {
           </button>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/notifications')}
+            aria-label="Notificaciones"
+            className="relative p-2.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+          >
+            <Bell size={20} />
+            {unread > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-800">
+                {unread > 9 ? '9+' : unread}
+              </span>
+            )}
+          </button>
           <ThemeToggle />
           <button
             onClick={() => navigate('/settings')}
@@ -164,6 +200,40 @@ export function Dashboard() {
               )}
             </div>
 
+            {/* Presupuesto semanal */}
+            {weeklyBudget != null && (
+              <div className="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 animate-fade-in-up">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                    <CalendarDays size={17} className="text-emerald-600 dark:text-emerald-400" />
+                    <span className="font-semibold text-sm">Esta semana</span>
+                  </div>
+                  <span className="text-sm font-bold text-slate-900 dark:text-white">
+                    {gastoSemana.toFixed(2)}€{' '}
+                    <span className="text-slate-400 font-medium">/ {weeklyBudget.toFixed(0)}€</span>
+                  </span>
+                </div>
+                <div className="h-2.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-700 ${weekBarColor}`}
+                    style={{ width: `${pctSemana}%` }}
+                  />
+                </div>
+                <p className="text-xs mt-2 text-slate-500 dark:text-slate-400">
+                  {overWeek ? (
+                    <span className="text-red-500 font-semibold">
+                      Has superado el presupuesto semanal en {(gastoSemana - weeklyBudget).toFixed(2)}€
+                    </span>
+                  ) : (
+                    <>
+                      Te quedan <span className="font-semibold text-slate-700 dark:text-slate-200">{(weeklyBudget - gastoSemana).toFixed(2)}€</span> esta semana
+                      {nearWeek && <span className="text-amber-500"> · ¡cuidado!</span>}
+                    </>
+                  )}
+                </p>
+              </div>
+            )}
+
             {/* Mini-stats */}
             <div className="grid grid-cols-2 gap-4 animate-fade-in-up">
               <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm">
@@ -225,6 +295,30 @@ export function Dashboard() {
                 <p className="text-slate-500 dark:text-slate-400 text-xs">Lo que tienes en casa, se llena al comprar</p>
               </div>
               <ChevronRight size={18} className="text-slate-300 dark:text-slate-600" />
+            </button>
+
+            {/* Acceso a Metas y logros */}
+            <button
+              onClick={() => navigate('/goals')}
+              className="w-full bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-4 flex items-center gap-3 shadow-lg shadow-amber-500/25 active:scale-95 transition-transform text-white"
+            >
+              <div className="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+                <Trophy size={22} />
+              </div>
+              <div className="text-left flex-1 min-w-0">
+                <h3 className="font-bold text-sm">Metas y logros</h3>
+                <p className="text-amber-50/90 text-xs">
+                  {streak > 0
+                    ? `Racha de ${streak} ${streak === 1 ? 'mes' : 'meses'} dentro de presupuesto`
+                    : 'Fija tu meta de ahorro y desbloquea medallas'}
+                </p>
+              </div>
+              {streak > 0 && (
+                <span className="shrink-0 inline-flex items-center gap-1 bg-white/20 px-2.5 py-1 rounded-lg font-bold text-sm">
+                  <Flame size={15} /> {streak}
+                </span>
+              )}
+              <ChevronRight size={18} className="text-white/70" />
             </button>
 
             {/* Gráfico de categorías */}

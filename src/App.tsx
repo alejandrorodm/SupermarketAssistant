@@ -21,6 +21,7 @@ const Balance = lazy(() => import('./pages/Balance').then((m) => ({ default: m.B
 const Goals = lazy(() => import('./pages/Goals').then((m) => ({ default: m.Goals })))
 const BatchScan = lazy(() => import('./pages/BatchScan').then((m) => ({ default: m.BatchScan })))
 const Inventory = lazy(() => import('./pages/Inventory').then((m) => ({ default: m.Inventory })))
+const Notifications = lazy(() => import('./pages/Notifications').then((m) => ({ default: m.Notifications })))
 
 function Loader() {
   return (
@@ -76,6 +77,7 @@ function App() {
           <Route path="/balance" element={protect(<Balance />)} />
           <Route path="/goals" element={protect(<Goals />)} />
           <Route path="/inventory" element={protect(<Inventory />)} />
+          <Route path="/notifications" element={protect(<Notifications />)} />
           <Route path="/ticket/:id" element={protect(<TicketDetail />)} />
           <Route path="/ticket/:id/edit" element={protect(<EditTicket />)} />
 
