@@ -1,5 +1,11 @@
 apply plugin: 'com.android.application'
 
+// versionCode/Name configurables desde el entorno (CI). Se usa una keystore
+// fija y versionada en el repo para que TODAS las builds compartan la misma
+// firma; así Android permite actualizar la app sin desinstalarla antes.
+def ciVersionCode = (System.getenv("ANDROID_VERSION_CODE") ?: "1").toInteger()
+def ciVersionName = System.getenv("ANDROID_VERSION_NAME") ?: "1.0"
+
 android {
     namespace = "com.alejandrorodm.ticketsaver"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +13,8 @@ android {
         applicationId "com.alejandrorodm.ticketsaver"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode ciVersionCode
+        versionName ciVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +22,26 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Keystore de firma tomada del entorno (GitHub Secrets en CI). NO se versiona
+    // en el repo. Si está disponible, se firma con ella (firma estable => updates
+    // sin desinstalar); si no, se cae a la firma de debug para no romper el build.
+    def keystoreFile = System.getenv("ANDROID_KEYSTORE_FILE")
+    def hasKeystore = keystoreFile != null && !keystoreFile.isEmpty() && file(keystoreFile).exists()
+    signingConfigs {
+        release {
+            if (hasKeystore) {
+                storeFile file(keystoreFile)
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+                storeType "PKCS12"
+            }
+        }
+    }
     buildTypes {
         release {
+            // Firma estable cuando hay keystore; debug como fallback.
+            signingConfig hasKeystore ? signingConfigs.release : signingConfigs.debug
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
