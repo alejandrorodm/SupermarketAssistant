@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { getDisplayNames } from './households'
 
 export interface CategoryData {
   name: string
@@ -11,6 +12,9 @@ export interface TicketSummary {
   total: number
   supermercado: string
   fecha: string
+  paid_by?: string | null
+  paid_by_name?: string | null
+  split_mode?: string | null
 }
 
 export interface SupermarketDatum {
@@ -48,7 +52,7 @@ export async function getDashboardStats(userId: string, householdId?: string | n
     // 1. Obtener gasto total del mes actual (del hogar activo o personal)
     let ticketsQuery = supabase
       .from('tickets')
-      .select('id, total, supermercado, fecha')
+      .select('id, total, supermercado, fecha, paid_by, split_mode')
     ticketsQuery = householdId
       ? ticketsQuery.eq('household_id', householdId)
       : ticketsQuery.eq('user_id', userId)
@@ -76,8 +80,19 @@ export async function getDashboardStats(userId: string, householdId?: string | n
       gastoSemana = (weekData || []).reduce((acc, curr) => acc + Number(curr.total), 0)
     }
 
-    // Obtener los 3 más recientes
-    const ticketsRecientes = ticketsData.slice(0, 3)
+    // Obtener los 3 más recientes (con nombre de quién pagó)
+    const recientesRaw = ticketsData.slice(0, 3)
+    const payerIds = recientesRaw.map((t) => t.paid_by).filter(Boolean) as string[]
+    const payerNames = payerIds.length > 0 ? await getDisplayNames(payerIds) : {}
+    const ticketsRecientes: TicketSummary[] = recientesRaw.map((t) => ({
+      id: t.id,
+      total: t.total,
+      supermercado: t.supermercado,
+      fecha: t.fecha,
+      paid_by: t.paid_by ?? null,
+      paid_by_name: t.paid_by ? payerNames[t.paid_by] ?? null : null,
+      split_mode: t.split_mode ?? null,
+    }))
 
     // 2. Obtener items del mes actual para las categorías
     const ticketIds = ticketsData.map(t => t.id)
@@ -198,7 +213,14 @@ export async function getTicketDetails(ticketId: string) {
 
     if (itemsError) throw itemsError
 
-    return { ticket, items }
+    // Resolver el nombre de quién pagó (tickets de hogar)
+    let paidByName: string | null = null
+    if (ticket?.paid_by) {
+      const names = await getDisplayNames([ticket.paid_by])
+      paidByName = names[ticket.paid_by] ?? null
+    }
+
+    return { ticket: { ...ticket, paid_by_name: paidByName }, items }
   } catch (error) {
     console.error('Error fetching ticket details:', error)
     throw new Error('No se pudo cargar el detalle del ticket.', { cause: error })
@@ -209,7 +231,7 @@ export async function getFullStats(userId: string, householdId?: string | null) 
   try {
     let ticketsQuery = supabase
       .from('tickets')
-      .select('id, total, supermercado, fecha')
+      .select('id, total, supermercado, fecha, paid_by, split_mode')
     ticketsQuery = householdId
       ? ticketsQuery.eq('household_id', householdId)
       : ticketsQuery.eq('user_id', userId)
@@ -217,6 +239,19 @@ export async function getFullStats(userId: string, householdId?: string | null) 
       .order('fecha', { ascending: false })
 
     if (ticketsError) throw ticketsError
+
+    // Resolver nombre de quién pagó (solo tiene sentido en tickets de hogar)
+    const payerIds = tickets.map((t) => t.paid_by).filter(Boolean) as string[]
+    const payerNames = payerIds.length > 0 ? await getDisplayNames(payerIds) : {}
+    const historial: TicketSummary[] = tickets.map((t) => ({
+      id: t.id,
+      total: t.total,
+      supermercado: t.supermercado,
+      fecha: t.fecha,
+      paid_by: t.paid_by ?? null,
+      paid_by_name: t.paid_by ? payerNames[t.paid_by] ?? null : null,
+      split_mode: t.split_mode ?? null,
+    }))
 
     const gastoTotal = tickets.reduce((acc, curr) => acc + Number(curr.total), 0)
 
@@ -262,7 +297,7 @@ export async function getFullStats(userId: string, householdId?: string | null) 
     }
 
     return {
-      historial: tickets,
+      historial,
       gastoTotal,
       gastoPorSupermercado: chartDataSuper,
       gastoPorCategoria: categoriasGlobales

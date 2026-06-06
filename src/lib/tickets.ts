@@ -141,15 +141,23 @@ export async function eliminarTicket(ticketId: string): Promise<void> {
 export async function actualizarTicketEnSupabase(
   ticketId: string,
   ticketData: TicketData,
+  household?: { paidBy?: string | null; splitMode?: SplitMode },
 ): Promise<void> {
   try {
+    const fields: Record<string, unknown> = {
+      supermercado: ticketData.supermercado,
+      fecha: ticketData.fecha,
+      total: ticketData.total,
+    }
+    // Solo tocamos pagador / reparto cuando se proporcionan (tickets de hogar)
+    if (household) {
+      if (household.paidBy !== undefined) fields.paid_by = household.paidBy
+      if (household.splitMode !== undefined) fields.split_mode = household.splitMode
+    }
+
     const { error: updateError } = await supabase
       .from('tickets')
-      .update({
-        supermercado: ticketData.supermercado,
-        fecha: ticketData.fecha,
-        total: ticketData.total,
-      })
+      .update(fields)
       .eq('id', ticketId)
     if (updateError) throw updateError
 

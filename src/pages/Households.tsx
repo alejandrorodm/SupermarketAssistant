@@ -13,6 +13,7 @@ import {
   UserPlus,
   Scale,
   Home,
+  Star,
   X,
 } from 'lucide-react'
 import { useUser } from '../hooks/useUser'
@@ -38,7 +39,7 @@ import {
 export function Households() {
   const navigate = useNavigate()
   const { user } = useUser()
-  const { households, active, setActive, refresh } = useHousehold()
+  const { households, active, setActive, homeId, setHome, refresh } = useHousehold()
   const toast = useToast()
 
   const [pending, setPending] = useState<PendingInvite[]>([])
@@ -211,47 +212,92 @@ export function Households() {
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 px-1">
             Tus hogares
           </h2>
+          <p className="text-xs text-slate-400 mb-2 px-1">
+            Toca para cambiar de vista. La <Star size={11} className="inline -mt-0.5 text-amber-500" />{' '}
+            marca la pantalla que se abre al entrar.
+          </p>
           <div className="space-y-2">
             {/* Modo personal */}
-            <button
-              onClick={() => setActive(null)}
-              className={`w-full bg-white dark:bg-slate-800 rounded-2xl p-4 border flex items-center gap-3 transition-colors ${
+            <div
+              className={`w-full bg-white dark:bg-slate-800 rounded-2xl border flex items-center transition-colors ${
                 !active
                   ? 'border-blue-500 ring-1 ring-blue-500'
-                  : 'border-slate-100 dark:border-slate-700 hover:border-slate-300'
+                  : 'border-slate-100 dark:border-slate-700'
               }`}
             >
-              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 flex items-center justify-center shrink-0">
-                <Home size={18} />
-              </div>
-              <div className="flex-1 text-left">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">Personal</p>
-                <p className="text-xs text-slate-400">Solo tus tickets</p>
-              </div>
-              {!active && <Check size={20} className="text-blue-500" />}
-            </button>
-
-            {households.map((h) => (
               <button
-                key={h.id}
-                onClick={() => setActive(h.id)}
-                className={`w-full bg-white dark:bg-slate-800 rounded-2xl p-4 border flex items-center gap-3 transition-colors ${
-                  active?.id === h.id
-                    ? 'border-blue-500 ring-1 ring-blue-500'
-                    : 'border-slate-100 dark:border-slate-700 hover:border-slate-300'
-                }`}
+                onClick={() => setActive(null)}
+                className="flex-1 flex items-center gap-3 p-4 min-w-0"
               >
-                <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                  <Users size={18} />
+                <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 flex items-center justify-center shrink-0">
+                  <Home size={18} />
                 </div>
                 <div className="flex-1 text-left min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{h.name}</p>
-                  <p className="text-xs text-slate-400">
-                    {h.created_by === user?.id ? 'Administrador' : 'Miembro'}
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    Personal
+                    {homeId === 'personal' && (
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                        Inicio
+                      </span>
+                    )}
                   </p>
+                  <p className="text-xs text-slate-400">Solo tus tickets</p>
                 </div>
-                {active?.id === h.id && <Check size={20} className="text-blue-500" />}
+                {!active && <Check size={20} className="text-blue-500 shrink-0" />}
               </button>
+              <button
+                onClick={() => setHome(null)}
+                aria-label="Usar como pantalla de inicio"
+                title="Usar como pantalla de inicio"
+                className="p-4 text-slate-300 dark:text-slate-600 hover:text-amber-500 transition-colors"
+              >
+                <Star
+                  size={20}
+                  className={homeId === 'personal' ? 'text-amber-500 fill-amber-500' : ''}
+                />
+              </button>
+            </div>
+
+            {households.map((h) => (
+              <div
+                key={h.id}
+                className={`w-full bg-white dark:bg-slate-800 rounded-2xl border flex items-center transition-colors ${
+                  active?.id === h.id
+                    ? 'border-blue-500 ring-1 ring-blue-500'
+                    : 'border-slate-100 dark:border-slate-700'
+                }`}
+              >
+                <button
+                  onClick={() => setActive(h.id)}
+                  className="flex-1 flex items-center gap-3 p-4 min-w-0"
+                >
+                  <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                    <Users size={18} />
+                  </div>
+                  <div className="flex-1 text-left min-w-0">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate flex items-center gap-1.5">
+                      <span className="truncate">{h.name}</span>
+                      {homeId === h.id && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 shrink-0">
+                          Inicio
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      {h.created_by === user?.id ? 'Administrador' : 'Miembro'}
+                    </p>
+                  </div>
+                  {active?.id === h.id && <Check size={20} className="text-blue-500 shrink-0" />}
+                </button>
+                <button
+                  onClick={() => setHome(h.id)}
+                  aria-label="Usar como pantalla de inicio"
+                  title="Usar como pantalla de inicio"
+                  className="p-4 text-slate-300 dark:text-slate-600 hover:text-amber-500 transition-colors"
+                >
+                  <Star size={20} className={homeId === h.id ? 'text-amber-500 fill-amber-500' : ''} />
+                </button>
+              </div>
             ))}
           </div>
 

@@ -16,6 +16,7 @@ import {
   Flame,
   Trophy,
   CalendarDays,
+  User,
 } from 'lucide-react'
 import { TrendingUp as TrendingUpIcon, ArrowUpRight } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts'
@@ -437,6 +438,12 @@ export function Dashboard() {
                           <p className="text-xs text-slate-500 dark:text-slate-400">
                             {new Date(ticket.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                           </p>
+                          {ticket.paid_by_name && (
+                            <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400 flex items-center gap-1 mt-0.5">
+                              <User size={11} className="shrink-0" />
+                              <span className="truncate">Pagó {ticket.paid_by_name}</span>
+                            </p>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">

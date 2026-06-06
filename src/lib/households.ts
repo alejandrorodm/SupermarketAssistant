@@ -85,6 +85,23 @@ export function setActiveHouseholdId(userId: string, householdId: string | null)
 }
 
 // ----------------------------------------------------------------------------
+// Pantalla de inicio por defecto (qué hogar se abre al entrar en la app).
+// Valor guardado: 'personal' | <householdId> | null (sin preferencia fijada).
+// ----------------------------------------------------------------------------
+const defaultKey = (userId: string) => `ts-default-household:${userId}`
+
+export function getDefaultHousehold(userId: string): string | null {
+  return localStorage.getItem(defaultKey(userId))
+}
+
+export function setDefaultHousehold(userId: string, value: string | null) {
+  // value === null  -> hogar compartido borrado / sin preferencia
+  // value === 'personal' -> el modo personal es el inicio
+  if (value) localStorage.setItem(defaultKey(userId), value)
+  else localStorage.removeItem(defaultKey(userId))
+}
+
+// ----------------------------------------------------------------------------
 // Helpers internos
 // ----------------------------------------------------------------------------
 async function getProfilesMap(userIds: string[]): Promise<Record<string, Profile>> {
@@ -105,6 +122,16 @@ async function getProfilesMap(userIds: string[]): Promise<Record<string, Profile
 function nameOf(map: Record<string, Profile>, userId: string): string {
   const p = map[userId]
   return p?.display_name || p?.email?.split('@')[0] || 'Usuario'
+}
+
+/** Devuelve un mapa userId -> nombre legible para los IDs dados. */
+export async function getDisplayNames(userIds: string[]): Promise<Record<string, string>> {
+  const profiles = await getProfilesMap(userIds)
+  const names: Record<string, string> = {}
+  Array.from(new Set(userIds)).filter(Boolean).forEach((id) => {
+    names[id] = nameOf(profiles, id)
+  })
+  return names
 }
 
 // ----------------------------------------------------------------------------

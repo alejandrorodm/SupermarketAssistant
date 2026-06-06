@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getErrorMessage } from '../lib/errors'
-import { ChevronLeft, Calendar, Loader2, ShoppingCart, Pencil, Trash2, ImageIcon } from 'lucide-react'
+import { ChevronLeft, Calendar, Loader2, ShoppingCart, Pencil, Trash2, ImageIcon, User } from 'lucide-react'
 import { getTicketDetails, categoryColors } from '../lib/stats'
 import { eliminarTicket } from '../lib/tickets'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
@@ -13,6 +13,9 @@ interface TicketRow {
   fecha: string
   total: number
   ticket_image_url: string | null
+  paid_by: string | null
+  paid_by_name: string | null
+  split_mode: string | null
 }
 interface ItemRow {
   id: string
@@ -145,6 +148,22 @@ export function TicketDetail() {
             <p className="text-blue-100 text-sm mb-1">Importe total</p>
             <div className="text-4xl font-extrabold">{Number(ticket.total).toFixed(2)} €</div>
           </div>
+          {ticket.paid_by_name && (
+            <div className="mt-4 flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-2xl px-4 py-3">
+              <div className="bg-white/20 rounded-full p-2 shrink-0">
+                <User size={18} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-blue-100 text-xs">Pagado por</p>
+                <p className="font-bold truncate">
+                  {ticket.paid_by_name}
+                  {ticket.split_mode === 'shared' && (
+                    <span className="font-medium text-blue-100"> · gasto compartido</span>
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-slate-100 dark:border-slate-700">

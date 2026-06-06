@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ShoppingCart, Calendar, Search, ChevronRight, Receipt } from 'lucide-react'
+import { ChevronLeft, ShoppingCart, Calendar, Search, ChevronRight, Receipt, User } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { getFullStats, type TicketSummary } from '../lib/stats'
 import { useHousehold } from '../contexts/HouseholdContext'
@@ -129,6 +129,15 @@ export function History() {
                               year: 'numeric',
                             })}
                           </p>
+                          {ticket.paid_by_name && (
+                            <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400 flex items-center gap-1 mt-1">
+                              <User size={12} className="shrink-0" />
+                              <span className="truncate">
+                                Pagó {ticket.paid_by_name}
+                                {ticket.split_mode === 'shared' ? ' · compartido' : ''}
+                              </span>
+                            </p>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
