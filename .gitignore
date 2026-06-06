@@ -12,6 +12,14 @@ dist
 dist-ssr
 *.local
 
+# Documentación local con credenciales / secretos (no subir).
+SECRETS.local.md
+secrets/
+*.keystore
+*.jks
+*.p12
+*.b64
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
